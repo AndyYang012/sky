@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>光遇身高查詢</title>
+
+  <!-- PWA 設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans CJK",Arial,"PingFang TC","Heiti TC",sans-serif;margin:24px;line-height:1.5}
+    h1{font-size:20px;margin:0 0 6px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin:16px 0}
+    input,textarea,button{width:100%;box-sizing:border-box;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #ccc;font-size:16px}
+    button{cursor:pointer}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #e6e6e6;padding:8px;text-align:left;font-size:14px}
+    th{background:#fafafa}
+
+    /* 圖片教學樣式 */
+    .guide{margin:16px 0}
+    .guide h2{font-size:18px;margin:0 0 10px}
+    .guide-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:12px;
+    }
+    .step{
+      border:1px solid #e6e6e6;border-radius:10px;padding:8px;margin:0;
+      background:#fff;cursor:default;transition:box-shadow .2s ease,transform .2s ease;
+    }
+    .step:hover{box-shadow:0 6px 18px rgba(0,0,0,.06);transform:translateY(-2px)}
+    .step img{width:100%;height:160px;object-fit:cover;border-radius:6px;display:block}
+    .step figcaption{font-size:13px;color:#555;margin-top:6px;text-align:center}
+
+    /* 純文字卡片（沒有圖片） */
+    .step.only-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+      text-align: center;
+      font-size: 14px;
+      color: #444;
+      cursor:default;
+    }
+    .step.only-text figcaption { margin:0; }
+  </style>
+</head>
+<body>
+  <h1>光遇身高查詢</h1>
+
+  <!-- 教學區塊 -->
+  <section class="guide">
+    <h2>使用教學</h2>
+    <div class="guide-grid">
+
+      <!-- 步驟1 有圖片 -->
+      <figure class="step" onclick="openPreview(this)">
+        <img src="IMG_3171.jpeg" alt="步驟1：開啟遊戲設定→帳號資訊→顯示QRcode" loading="lazy">
+        <figcaption>步驟1：開啟遊戲設定→帳號資訊→顯示QRcode</figcaption>
+      </figure>
+
+      <!-- 步驟2 只有文字 -->
+      <div class="step only-text">
+        <figcaption>步驟2：掃描 QRcode 取得網址並複製（用 Line 也可以）</figcaption>
+      </div>
+
+      <!-- 步驟3 只有文字 -->
+      <div class="step only-text">
+        <figcaption>步驟3：網址貼上並按「解析」查看結果</figcaption>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 單一連結 -->
+  <div class="card">
+    <label for="single">單一連結</label>
+    <input id="single" placeholder="貼上網址 / o=... / token">
+    <div class="row">
+      <button onclick="runSingle()">解析</button>
+      <button onclick="clearSingle()">清除</button>
+    </div>
+    <div id="singleOut"></div>
+  </div>
+
+  <!-- 批次連結 -->
+  <div class="card">
+    <label for="batch">多條連結（每行一條）</label>
+    <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token"></textarea>
+    <div class="row">
+      <button onclick="runBatch()">批次解析</button>
+      <button onclick="clearBatch()">清除</button>
+    </div>
+    <div id="batchOut"></div>
+  </div>
+
+<script>
+/* ========= 公用 ========= */
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
+function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
+
+/* ========= 擷取 o token ========= */
+function extractOToken(input){
+  let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
+  const head = s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i);
+  if (head) return head[1];
+  try{
+    const u=new URL(s);
+    const q=u.searchParams.get("o"); if(q) return q;
+    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i); if(mPath) return mPath[1];
+  }catch{}
+  const m = s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i);
+  if(m) return m[1];
+  if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
+  throw new Error("找不到 o 參數");
+}
+
+/* ========= base64url → 字串 ========= */
+function b64urlToText(token){
+  try{ token=decodeURIComponent(token); }catch(e){}
+  let b64=token.replace(/-/g,'+').replace(/_/g,'/');
+  b64+='='.repeat((4-(b64.length%4))%4);
+  try{ return atob(b64); }catch(e){}
+  try{
+    const bin=atob(b64);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i)&0xFF;
+    return new TextDecoder('utf-8',{fatal:false}).decode(bytes);
+  }catch(e){}
+  try{
+    const bin=atob(b64); let cleaned='';
+    for(let i=0;i<bin.length;i++){ const c=bin.charCodeAt(i); cleaned += (c>=32 && c<=126) ? bin[i] : ' '; }
+    return cleaned;
+  }catch(e){ throw new Error('base64 解碼失敗'); }
+}
+
+/* ========= JSON 掃描 ========= */
+function scanJsonBlocks(text){
+  const collect=(s)=>{
+    const blocks=[]; let start=-1,depth=0,inStr=false,esc=false;
+    for(let i=0;i<s.length;i++){
+      const ch=s[i];
+      if(start===-1){ if(ch==='{'){ start=i; depth=1; inStr=false; esc=false; } continue; }
+      if(esc){ esc=false; continue; }
+      if(ch==='\\'){ esc=true; continue; }
+      if(ch==='"'){ inStr=!inStr; continue; }
+      if(!inStr){
+        if(ch==='{') depth++;
+        else if(ch==='}'){ depth--; if(depth===0){ blocks.push(s.slice(start,i+1)); start=-1; } }
+      }
+    }
+    return blocks;
+  };
+  let blocks=collect(text); if(blocks.length) return blocks;
+  let cleaned=''; for(let i=0;i<text.length;i++){ const c=text.charCodeAt(i); cleaned+=(c>=32&&c<=126)?text[i]:' '; }
+  return collect(cleaned);
+}
+
+/* ========= 遞迴找 height/scale ========= */
+function findHeightScale(obj){
+  if(obj && typeof obj==="object"){
+    if("height" in obj && "scale" in obj) return {height:obj.height, scale:obj.scale};
+    for(const k in obj){ const r=findHeightScale(obj[k]); if(r) return r; }
+  }
+  return null;
+}
+
+/* ========= 主解析 ========= */
+function parseHeightScaleFromUrl(input){
+  const token = extractOToken(input);
+  const text  = b64urlToText(token);
+  const ascii = text.replace(/[^\x20-\x7E]/g, " ");
+  const hMatch = ascii.match(/h[eE]i[gG]h[tT][^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
+  const sMatch = ascii.match(/s[cC]a[lL]e[^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
+  if (hMatch && sMatch){
+    return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
+  }
+  const blocks = scanJsonBlocks(text);
+  for (const js of blocks){
+    try{ const data = JSON.parse(js); const r = findHeightScale(data); if (r) return r; }catch{}
+    try{ const cleaned = js.replace(/[^\x20-\x7E]/g, " "); const data2 = JSON.parse(cleaned); const r2 = findHeightScale(data2); if (r2) return r2; }catch{}
+  }
+  throw new Error("找不到 JSON 或 height/scale\n片段: " + ascii.slice(0,200));
+}
+
+/* ========= 單一 ========= */
+function runSingle(){
+  const url=document.getElementById('single').value.trim();
+  const out=document.getElementById('singleOut');
+  out.innerHTML='';
+  if(!url) return;
+  try{
+    const {height,scale}=parseHeightScaleFromUrl(url);
+    const val=calc(height,scale), hi=calc(2,scale), lo=calc(-2,scale);
+    out.innerHTML=`<table>
+      <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
+      <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
+      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
+      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
+      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
+    </table>`;
+  }catch(e){ out.textContent="錯誤："+e.message; }
+}
+function clearSingle(){document.getElementById('single').value='';document.getElementById('singleOut').innerHTML=''}
+
+/* ========= 批次 ========= */
+function runBatch(){
+  const txt=document.getElementById('batch').value.trim();
+  const out=document.getElementById('batchOut'); out.innerHTML=''; if(!txt) return;
+  const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const rows=lines.map(link=>{
+    try{ const r=parseHeightScaleFromUrl(link); return {link,height:r.height,scale:r.scale,val:calc(r.height,r.scale),hi:calc(2,r.scale),lo:calc(-2,r.scale)}; }
+    catch(e){return {link,err:e.message};}
+  });
+  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>狀態</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    html+=`<tr>
+      <td>${i+1}</td>
+      <td class="mono" style="max-width:260px;overflow-wrap:anywhere;">${escapeHtml(r.link)}</td>
+      <td class="mono">${r.err?'—':fmt(r.height)}</td>
+      <td class="mono">${r.err?'—':fmt(r.scale)}</td>
+      <td class="mono">${r.err?'—':fmt(r.val)}</td>
+      <td class="mono">${r.err?'—':fmt(r.hi)}</td>
+      <td class="mono">${r.err?'—':fmt(r.lo)}</td>
+      <td>${r.err?('錯誤：'+escapeHtml(r.err)):'OK'}</td>
+    </tr>`;
+  });
+  html+='</tbody></table>'; out.innerHTML=html;
+}
+function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML=''}
+
+/* ========= 圖片預覽 ========= */
+function openPreview(fig){
+  const src = fig.querySelector('img').src;
+  const alt = fig.querySelector('img').alt || '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,.75);
+    display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;
+  `;
+  overlay.innerHTML = `
+    <img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+  `;
+  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
+  document.addEventListener('keydown', escClose, {once:true});
+  function escClose(e){ if(e.key==='Escape') overlay.click(); }
+  document.body.appendChild(overlay);
+}
+
+/* ========= PWA Service Worker ========= */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
