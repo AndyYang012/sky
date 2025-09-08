@@ -67,9 +67,31 @@
     .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
     .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
     .step figcaption {font-size:14px;margin-top:8px;color:#444;}
-    footer {text-align:center;font-size:13px;color:#eee;padding:20px;margin-top:40px;}
-    footer b {color:#fff;}
-    footer .disclaimer {font-size:12px;color:#ddd;margin-top:6px;}
+    footer {
+      background: rgba(30, 60, 120, 0.9); /* 深藍底 */
+      padding: 20px;
+      margin-top: 40px;
+    }
+    .footer-inner {
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .footer-inner b {
+      color: #ffd966; /* 金色強調 */
+    }
+    #counter {
+      font-size: 15px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(0,0,0,0.4);
+    }
+    .disclaimer {
+      font-size: 12px;
+      color: #ddd;
+      margin-top: 6px;
+    }
     .updating {
       margin-top: 6px;
       font-size: 14px;
@@ -130,16 +152,14 @@
     <div id="batchOut"></div>
   </div>
 
-  <!-- 使用次數 -->
-  <div id="counter" style="margin-top:20px;color:#fff;font-size:15px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.3)">
-    累積使用次數：載入中...
-  </div>
-
   <!-- Footer -->
   <footer>
-    製作者：<b>言陌</b>
-    <div class="updating">🕯️ 此網頁持續更新</div>
-    <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+    <div class="footer-inner">
+      <div id="counter">累積使用次數：載入中...</div>
+      <div>製作者：<b>言陌</b></div>
+      <div class="updating">🕯️ 此網頁持續更新</div>
+      <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+    </div>
   </footer>
 
 <script>
@@ -150,7 +170,7 @@ fetch('https://api.countapi.xyz/hit/sky-height-checker/demo')
     document.getElementById('counter').innerText="累積使用次數："+res.value;
   });
 
-/* --- 原本的解析程式碼 --- */
+/* --- 解析程式碼 (保留原本功能) --- */
 function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
