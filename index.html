@@ -5,92 +5,161 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>光遇身高查詢</title>
 
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans CJK",Arial,"PingFang TC","Heiti TC",sans-serif;margin:24px;line-height:1.5}
-    h1{font-size:20px;margin:0 0 6px}
-    .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin:16px 0}
-    input,textarea,button{width:100%;box-sizing:border-box;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #ccc;font-size:16px}
-    button{cursor:pointer}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{border:1px solid #e6e6e6;padding:8px;text-align:left;font-size:14px}
-    th{background:#fafafa}
-
-    /* 教學卡片 */
-    .guide{margin:16px 0}
-    .guide h2{font-size:18px;margin:0 0 10px}
-    .guide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-    .step{border:1px solid #e6e6e6;border-radius:10px;padding:8px;margin:0;background:#fff;transition:box-shadow .2s,transform .2s}
-    .step:hover{box-shadow:0 6px 18px rgba(0,0,0,.06);transform:translateY(-2px)}
-    .step img{width:100%;height:160px;object-fit:cover;border-radius:6px;display:block}
-    .step figcaption{font-size:13px;color:#555;margin-top:6px;text-align:center}
-    .step.only-text{display:flex;align-items:center;justify-content:center;min-height:100px;text-align:center;font-size:14px;color:#444}
-
-    /* 製作者 */
-    footer{margin-top:60px;padding:10px 0;border-top:1px solid #eee;text-align:center;font-size:13px;color:#888}
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC","PingFang TC",sans-serif;
+      background: linear-gradient(160deg,#a1c4fd 0%,#c2e9fb 100%);
+      color: #333;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      padding: 20px;
+      font-size: 26px;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    h1 img {
+      height: 28px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .card {
+      background: rgba(255,255,255,0.85);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 700px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    label {font-weight: bold;color: #444;}
+    input,textarea {
+      width: 100%;padding: 12px;margin-top: 10px;
+      border-radius: 10px;border: 1px solid #ccc;font-size: 15px;
+      outline: none;transition: 0.2s;
+    }
+    input:focus,textarea:focus {
+      border-color: #6fa8dc;box-shadow: 0 0 8px rgba(111,168,220,0.4);
+    }
+    button {
+      padding: 10px;border: none;border-radius: 8px;
+      font-size: 15px;cursor: pointer;transition: 0.2s;
+    }
+    button.primary {background: linear-gradient(135deg,#6fa8dc,#3d85c6);color: white;}
+    button.primary:hover {background: linear-gradient(135deg,#5b96cc,#366fae);}
+    button.secondary {background: #fff;border: 1px solid #bbb;color: #333;}
+    button.secondary:hover {background: #f0f0f0;}
+    .row {display: grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    table {
+      width:100%;border-collapse:collapse;margin-top:15px;
+      background: rgba(255,255,255,0.9);border-radius: 10px;overflow:hidden;
+    }
+    th,td {padding:10px;text-align:center;border-bottom:1px solid #eee;}
+    th {background:#f8fbff;font-weight:bold;color:#333;}
+    .guide {max-width:900px;margin:20px auto;text-align:center;}
+    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);}
+    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
+    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+    .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
+    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
+    footer {text-align:center;font-size:13px;color:#eee;padding:20px;margin-top:40px;}
+    footer b {color:#fff;}
+    footer .disclaimer {font-size:12px;color:#ddd;margin-top:6px;}
+    .updating {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #ffd966, #ff9a76, #ffd966);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glow 3s linear infinite;
+      text-shadow: 0 0 8px rgba(255, 215, 100, 0.6);
+      display: inline-block;
+    }
+    @keyframes glow {
+      0% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+      100% { background-position: 0% center; }
+    }
   </style>
 </head>
 <body>
-  <h1>光遇身高查詢</h1>
+  <h1>
+    <img src="logo.svg" alt="logo">
+    光遇身高查詢
+  </h1>
 
-  <!-- 使用教學 -->
+  <!-- 教學 -->
   <section class="guide">
     <h2>使用教學</h2>
     <div class="guide-grid">
       <figure class="step" onclick="openPreview(this)">
-        <img src="IMG_3171.jpeg" alt="步驟1：開啟遊戲設定→帳號資訊→顯示QRcode" loading="lazy">
-        <figcaption>步驟1：開啟遊戲設定→帳號資訊→顯示QRcode</figcaption>
+        <img src="IMG_3171.jpeg" alt="步驟1">
+        <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
       </figure>
-      <div class="step only-text"><figcaption>步驟2：掃描 QRcode 取得網址並複製（用 Line 也可）</figcaption></div>
-      <div class="step only-text"><figcaption>步驟3：把網址貼上後按「解析」查看結果</figcaption></div>
+      <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
+      <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
     </div>
   </section>
 
-  <!-- 單一連結 -->
+  <!-- 單一 -->
   <div class="card">
     <label for="single">單一連結</label>
     <input id="single" placeholder="貼上網址 / o=... / token">
     <div class="row">
-      <button onclick="runSingle()">解析</button>
-      <button onclick="clearSingle()">清除</button>
+      <button class="primary" onclick="runSingle()">解析</button>
+      <button class="secondary" onclick="clearSingle()">清除</button>
     </div>
     <div id="singleOut"></div>
   </div>
 
-  <!-- 批次連結 -->
+  <!-- 批次 -->
   <div class="card">
     <label for="batch">多條連結（每行一條）</label>
-    <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token"></textarea>
+    <textarea id="batch" rows="5" placeholder="每行貼一條網址 / o=... / token"></textarea>
     <div class="row">
-      <button onclick="runBatch()">批次解析</button>
-      <button onclick="clearBatch()">清除</button>
+      <button class="primary" onclick="runBatch()">批次解析</button>
+      <button class="secondary" onclick="clearBatch()">清除</button>
     </div>
     <div id="batchOut"></div>
   </div>
 
-  <!-- 製作者 -->
-  <footer>製作者：<b>言陌</b></footer>
-  <div style="font-size:12px;color:#aaa;margin-top:4px">
-  本工具與 thatgamecompany 無關，僅供玩家交流使用
-</div>
+  <!-- 使用次數 -->
+  <div id="counter" style="margin-top:20px;color:#fff;font-size:15px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.3)">
+    累積使用次數：載入中...
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    製作者：<b>言陌</b>
+    <div class="updating">🕯️ 此網頁持續更新</div>
+    <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+  </footer>
 
 <script>
+/* --- 計數器 --- */
+fetch('https://api.countapi.xyz/hit/sky-height-checker/demo')
+  .then(res=>res.json())
+  .then(res=>{
+    document.getElementById('counter').innerText="累積使用次數："+res.value;
+  });
+
+/* --- 原本的解析程式碼 --- */
 function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
-
 function extractOToken(input){
   let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
   const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
-  try{const u=new URL(s); const q=u.searchParams.get("o"); if(q) return q;
-       const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i); if(mPath) return mPath[1];}catch{}
-  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(m) return m[1];
+  try{const u=new URL(s);const q=u.searchParams.get("o");if(q) return q;
+    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i);if(mPath) return mPath[1];}catch{}
+  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i);if(m) return m[1];
   if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
   throw new Error("找不到 o 參數");
 }
@@ -110,30 +179,30 @@ function scanJsonBlocks(text){
       if(ch==='"'){inStr=!inStr;continue;}
       if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
     }return blocks;};
-  let blocks=collect(text); if(blocks.length) return blocks;
-  let cleaned=''; for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';} return collect(cleaned);
+  let blocks=collect(text);if(blocks.length) return blocks;
+  let cleaned='';for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';}return collect(cleaned);
 }
 function findHeightScale(obj){
-  if(obj&&typeof obj==="object"){ if("height" in obj && "scale" in obj) return {height:obj.height,scale:obj.scale};
-    for(const k in obj){const r=findHeightScale(obj[k]); if(r) return r;}
-  } return null;
+  if(obj&&typeof obj==="object"){if("height" in obj&&"scale" in obj) return {height:obj.height,scale:obj.scale};
+    for(const k in obj){const r=findHeightScale(obj[k]);if(r) return r;}}
+  return null;
 }
 function parseHeightScaleFromUrl(input){
-  const token=extractOToken(input); const text=b64urlToText(token);
+  const token=extractOToken(input);const text=b64urlToText(token);
   const ascii=text.replace(/[^\x20-\x7E]/g," ");
   const hMatch=ascii.match(/h[eE]i[gG]h[tT][^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
   const sMatch=ascii.match(/s[cC]a[lL]e[^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
   if(hMatch&&sMatch){return {height:parseFloat(hMatch[1]),scale:parseFloat(sMatch[1])};}
   const blocks=scanJsonBlocks(text);
   for(const js of blocks){
-    try{const data=JSON.parse(js); const r=findHeightScale(data); if(r) return r;}catch{}
-    try{const cleaned=js.replace(/[^\x20-\x7E]/g," "); const data2=JSON.parse(cleaned); const r2=findHeightScale(data2); if(r2) return r2;}catch{}
+    try{const data=JSON.parse(js);const r=findHeightScale(data);if(r) return r;}catch{}
+    try{const cleaned=js.replace(/[^\x20-\x7E]/g," ");const data2=JSON.parse(cleaned);const r2=findHeightScale(data2);if(r2) return r2;}catch{}
   }
-  throw new Error("找不到 JSON 或 height/scale\n片段: " + ascii.slice(0,200));
+  throw new Error("找不到 JSON 或 height/scale\n片段: "+ascii.slice(0,200));
 }
 function runSingle(){
-  const url=document.getElementById('single').value.trim(); const out=document.getElementById('singleOut'); out.innerHTML=''; if(!url) return;
-  try{const {height,scale}=parseHeightScaleFromUrl(url); const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
+  const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
+  try{const {height,scale}=parseHeightScaleFromUrl(url);const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
     out.innerHTML=`<table>
       <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
       <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
@@ -145,7 +214,7 @@ function runSingle(){
 }
 function clearSingle(){document.getElementById('single').value='';document.getElementById('singleOut').innerHTML=''}
 function runBatch(){
-  const txt=document.getElementById('batch').value.trim(); const out=document.getElementById('batchOut'); out.innerHTML=''; if(!txt) return;
+  const txt=document.getElementById('batch').value.trim();const out=document.getElementById('batchOut');out.innerHTML='';if(!txt) return;
   const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
   const rows=lines.map(link=>{try{const r=parseHeightScaleFromUrl(link);return {link,height:r.height,scale:r.scale,val:calc(r.height,r.scale),hi:calc(2,r.scale),lo:calc(-2,r.scale)};}catch(e){return {link,err:e.message};}});
   let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>狀態</th></tr></thead><tbody>';
@@ -159,19 +228,17 @@ function runBatch(){
       <td class="mono">${r.err?'—':fmt(r.lo)}</td>
       <td>${r.err?('錯誤：'+escapeHtml(r.err)):'OK'}</td>
     </tr>`;});
-  html+='</tbody></table>'; out.innerHTML=html;
+  html+='</tbody></table>';out.innerHTML=html;
 }
 function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML=''}
-
 function openPreview(fig){
-  const src=fig.querySelector('img').src, alt=fig.querySelector('img').alt||''; const overlay=document.createElement('div');
+  const src=fig.querySelector('img').src,alt=fig.querySelector('img').alt||'';const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
   overlay.innerHTML=`<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
   overlay.addEventListener('click',()=>document.body.removeChild(overlay));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
   document.body.appendChild(overlay);
 }
-
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 </script>
 </body>
