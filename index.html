@@ -225,28 +225,28 @@ function findHeightScale(obj){
     for(const k in obj){const r=findHeightScale(obj[k]);if(r) return r;}}
   return null;
 }
+// 直接取代原本的 parseHeightScaleFromUrl
 function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const text  = b64urlToText(token);
 
-  // 先移除非 ASCII，避免控制碼干擾
+  // 先移除非 ASCII，避免控制碼干擾搜尋
   const ascii = text.replace(/[^\x20-\x7E]/g, ' ');
 
-  // 超寬鬆正規化：允許每個字母中間最多 200 個任意字元（甚至字母）
+  // 超寬鬆 key 正規化：允許每個字母中間被插入大量任意字元
   // 看到 h...e...i...g...h...t 就視為 height；s...c...a...l...e 視為 scale
   const normalizeKeys = s => s
     .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
     .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
 
-  // 先把 key 正規化，再把多餘空白合併
   const normalized = normalizeKeys(ascii).replace(/\s+/g, ' ');
 
-  // 先試標準 JSON 形式
+  // 1) 先試標準 JSON 形式
   const NUM = '(-?\\d+(?:\\.\\d+)?)';
   let hMatch = normalized.match(new RegExp('[\'"]height[\'"]\\s*:\\s*' + NUM, 'i'));
   let sMatch = normalized.match(new RegExp('[\'"]scale[\'"]\\s*:\\s*'  + NUM, 'i'));
 
-  // 再試超寬鬆距離（距離上限 1000 個非數字字元）
+  // 2) 再試寬鬆距離（key 與數字中間最多 1000 個非數字）
   if (!hMatch) hMatch = normalized.match(new RegExp('height[^0-9-]{0,1000}' + NUM, 'i'));
   if (!sMatch) sMatch = normalized.match(new RegExp('scale[^0-9-]{0,1000}'  + NUM, 'i'));
 
@@ -254,7 +254,7 @@ function parseHeightScaleFromUrl(input){
     return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
   }
 
-  // 仍不行就掃 JSON 區塊（維持原本流程）
+  // 3) 掃 JSON 區塊（原本的流程）
   const blocks = scanJsonBlocks(text);
   for (const js of blocks) {
     try {
@@ -262,14 +262,12 @@ function parseHeightScaleFromUrl(input){
       const r = findHeightScale(data);
       if (r) return r;
     } catch {}
-
     try {
       const cleaned = js.replace(/[^\x20-\x7E]/g, ' ');
       const data2 = JSON.parse(cleaned);
       const r2 = findHeightScale(data2);
       if (r2) return r2;
     } catch {}
-
     try {
       const repaired = normalizeKeys(js);
       const data3 = JSON.parse(repaired);
@@ -278,8 +276,16 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  // 還是不行就回傳片段做偵錯
-  throw new Error('找不到 JSON 或 height/scale\n片段: ' + normalized.slice(0, 400));
+  // 4) 最後保底：全文超寬鬆搜尋（避免 height/scale 出現在很後面）
+  const ultra = ascii.replace(/[^\x20-\x7E]/g, ' ');
+  let h = ultra.match(new RegExp('height[^0-9-]{0,1500}' + NUM, 'i'));
+  let s = ultra.match(new RegExp('scale[^0-9-]{0,1500}'  + NUM, 'i'));
+  if (h && s) {
+    return { height: parseFloat(h[1]), scale: parseFloat(s[1]) };
+  }
+
+  // 失敗就回傳前 500 字供偵錯
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 500));
 }
 function runSingle(){
   const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
