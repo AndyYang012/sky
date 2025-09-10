@@ -229,47 +229,47 @@ function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const text  = b64urlToText(token);
 
-  // 先把非 ASCII 清掉，免得干擾
+  // 先移除非 ASCII，避免控制碼干擾
   const ascii = text.replace(/[^\x20-\x7E]/g, ' ');
 
-  // 1) 把被插亂字的 key 正規化（允許中間任意字元，盡量兇狠）
-  //    如： hXXeYYYiZZgAAhBBt  -> height
+  // 超寬鬆正規化：允許每個字母中間最多 200 個任意字元（甚至字母）
+  // 看到 h...e...i...g...h...t 就視為 height；s...c...a...l...e 視為 scale
   const normalizeKeys = s => s
-    .replace(/h.{0,6}?e.{0,6}?i.{0,6}?g.{0,6}?h.{0,6}?t/gi, 'height')
-    .replace(/s.{0,6}?c.{0,6}?a.{0,6}?l.{0,6}?e/gi, 'scale');
+    .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
+    .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
 
+  // 先把 key 正規化，再把多餘空白合併
   const normalized = normalizeKeys(ascii).replace(/\s+/g, ' ');
 
-  // 2) 先試「字典式」寫法："height": 1.23 / 'height':1.23
+  // 先試標準 JSON 形式
   const NUM = '(-?\\d+(?:\\.\\d+)?)';
   let hMatch = normalized.match(new RegExp('[\'"]height[\'"]\\s*:\\s*' + NUM, 'i'));
-  let sMatch = normalized.match(new RegExp('[\'"]scale[\'"]\\s*:\\s*' + NUM, 'i'));
+  let sMatch = normalized.match(new RegExp('[\'"]scale[\'"]\\s*:\\s*'  + NUM, 'i'));
 
-  // 3) 再試更寬鬆寫法：height ……(≤200字)…… 數字
-  if (!hMatch) hMatch = normalized.match(new RegExp('height[^0-9-]{0,200}' + NUM, 'i'));
-  if (!sMatch) sMatch = normalized.match(new RegExp('scale[^0-9-]{0,200}' + NUM, 'i'));
+  // 再試超寬鬆距離（距離上限 1000 個非數字字元）
+  if (!hMatch) hMatch = normalized.match(new RegExp('height[^0-9-]{0,1000}' + NUM, 'i'));
+  if (!sMatch) sMatch = normalized.match(new RegExp('scale[^0-9-]{0,1000}'  + NUM, 'i'));
 
   if (hMatch && sMatch) {
     return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
   }
 
-  // 4) 還不行就掃 JSON 區塊試著 parse（保留原本邏輯）
+  // 仍不行就掃 JSON 區塊（維持原本流程）
   const blocks = scanJsonBlocks(text);
   for (const js of blocks) {
-    // 4a. 直接 parse
     try {
       const data = JSON.parse(js);
       const r = findHeightScale(data);
       if (r) return r;
     } catch {}
-    // 4b. 清掉非 ASCII 再 parse
+
     try {
       const cleaned = js.replace(/[^\x20-\x7E]/g, ' ');
       const data2 = JSON.parse(cleaned);
       const r2 = findHeightScale(data2);
       if (r2) return r2;
     } catch {}
-    // 4c. 連 key 都被打散 → 先把打散的 key 換回來再 parse
+
     try {
       const repaired = normalizeKeys(js);
       const data3 = JSON.parse(repaired);
@@ -278,8 +278,8 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  // 5) 仍失敗就丟出錯誤（顯示前 200 字方便你偵錯）
-  throw new Error('找不到 JSON 或 height/scale\n片段: ' + normalized.slice(0, 200));
+  // 還是不行就回傳片段做偵錯
+  throw new Error('找不到 JSON 或 height/scale\n片段: ' + normalized.slice(0, 400));
 }
 function runSingle(){
   const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
