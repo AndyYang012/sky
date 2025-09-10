@@ -230,31 +230,36 @@ function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const text  = b64urlToText(token);
 
-  // 先移除非 ASCII，避免控制碼干擾搜尋
+  // 移除非 ASCII，避免控制碼干擾
   const ascii = text.replace(/[^\x20-\x7E]/g, ' ');
 
-  // 超寬鬆 key 正規化：允許每個字母中間被插入大量任意字元
-  // 看到 h...e...i...g...h...t 就視為 height；s...c...a...l...e 視為 scale
+  // 超寬鬆 key 正規化：允許每個字母中間插入大量任意字元
   const normalizeKeys = s => s
     .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
     .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
 
   const normalized = normalizeKeys(ascii).replace(/\s+/g, ' ');
 
-  // 1) 先試標準 JSON 形式
+  // 數字樣式
   const NUM = '(-?\\d+(?:\\.\\d+)?)';
-  let hMatch = normalized.match(new RegExp('[\'"]height[\'"]\\s*:\\s*' + NUM, 'i'));
-  let sMatch = normalized.match(new RegExp('[\'"]scale[\'"]\\s*:\\s*'  + NUM, 'i'));
 
-  // 2) 再試寬鬆距離（key 與數字中間最多 1000 個非數字）
-  if (!hMatch) hMatch = normalized.match(new RegExp('height[^0-9-]{0,1000}' + NUM, 'i'));
-  if (!sMatch) sMatch = normalized.match(new RegExp('scale[^0-9-]{0,1000}'  + NUM, 'i'));
+  // 1) 標準/常見寫法："height": 1.23、'height':1.23、height : 1.23、height=1.23、height 1.23
+  const tryDirect = (k, s) =>
+    s.match(new RegExp('[\'"]' + k + '[\'"]\\s*[:=]?\\s*' + NUM, 'i')) ||
+    s.match(new RegExp('\\b' + k + '\\b\\s*[:=]?\\s*' + NUM, 'i'));
+
+  let hMatch = tryDirect('height', normalized);
+  let sMatch = tryDirect('scale',  normalized);
+
+  // 2) 寬鬆距離：key 與數字中間最多 1000 個非數字
+  if (!hMatch) hMatch = normalized.match(new RegExp('\\bheight\\b[^0-9-]{0,1000}' + NUM, 'i'));
+  if (!sMatch) sMatch = normalized.match(new RegExp('\\bscale\\b[^0-9-]{0,1000}'  + NUM, 'i'));
 
   if (hMatch && sMatch) {
     return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
   }
 
-  // 3) 掃 JSON 區塊（原本的流程）
+  // 3) 掃 JSON 區塊（原流程；含修復後再 parse）
   const blocks = scanJsonBlocks(text);
   for (const js of blocks) {
     try {
@@ -276,16 +281,19 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  // 4) 最後保底：全文超寬鬆搜尋（避免 height/scale 出現在很後面）
+  // 4) 最後保底：對「全文」做超寬鬆搜尋
   const ultra = ascii.replace(/[^\x20-\x7E]/g, ' ');
-  let h = ultra.match(new RegExp('height[^0-9-]{0,1500}' + NUM, 'i'));
-  let s = ultra.match(new RegExp('scale[^0-9-]{0,1500}'  + NUM, 'i'));
+  let h = ultra.match(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'i')) ||
+          ultra.match(new RegExp('\\bheight\\b\\s*[:=]?\\s*' + NUM, 'i'));
+  let s = ultra.match(new RegExp('\\bscale\\b[^0-9-]{0,1500}'  + NUM, 'i')) ||
+          ultra.match(new RegExp('\\bscale\\b\\s*[:=]?\\s*'  + NUM, 'i'));
+
   if (h && s) {
     return { height: parseFloat(h[1]), scale: parseFloat(s[1]) };
   }
 
-  // 失敗就回傳前 500 字供偵錯
-  throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 500));
+  // 失敗才顯示片段做偵錯
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 600));
 }
 function runSingle(){
   const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
