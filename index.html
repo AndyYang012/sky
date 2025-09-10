@@ -243,7 +243,7 @@ function parseHeightScaleFromUrl(input){
   // 數字樣式
   const NUM = '(-?\\d+(?:\\.\\d+)?)';
 
-  // 1) 標準/常見寫法："height": 1.23、'height':1.23、height : 1.23、height=1.23、height 1.23
+  // 1) 標準/常見寫法
   const tryDirect = (k, s) =>
     s.match(new RegExp('[\'"]' + k + '[\'"]\\s*[:=]?\\s*' + NUM, 'i')) ||
     s.match(new RegExp('\\b' + k + '\\b\\s*[:=]?\\s*' + NUM, 'i'));
@@ -251,7 +251,7 @@ function parseHeightScaleFromUrl(input){
   let hMatch = tryDirect('height', normalized);
   let sMatch = tryDirect('scale',  normalized);
 
-  // 2) 寬鬆距離：key 與數字中間最多 1000 個非數字
+  // 2) 寬鬆距離
   if (!hMatch) hMatch = normalized.match(new RegExp('\\bheight\\b[^0-9-]{0,1000}' + NUM, 'i'));
   if (!sMatch) sMatch = normalized.match(new RegExp('\\bscale\\b[^0-9-]{0,1000}'  + NUM, 'i'));
 
@@ -259,7 +259,7 @@ function parseHeightScaleFromUrl(input){
     return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
   }
 
-  // 3) 掃 JSON 區塊（原流程；含修復後再 parse）
+  // 3) 掃 JSON 區塊（原流程）
   const blocks = scanJsonBlocks(text);
   for (const js of blocks) {
     try {
@@ -281,20 +281,35 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  // 4) 最後保底：對「全文」做超寬鬆搜尋
+  // 4) 全文超寬鬆搜尋
   const ultra = ascii.replace(/[^\x20-\x7E]/g, ' ');
+
   let h = ultra.match(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'i')) ||
           ultra.match(new RegExp('\\bheight\\b\\s*[:=]?\\s*' + NUM, 'i'));
   let s = ultra.match(new RegExp('\\bscale\\b[^0-9-]{0,1500}'  + NUM, 'i')) ||
           ultra.match(new RegExp('\\bscale\\b\\s*[:=]?\\s*'  + NUM, 'i'));
 
+  // ✅ 新增保底：只抓到 scale 時，回頭在 scale 前面找最近的數字當 height
+  if (!h && s) {
+    const sIndex = s.index ?? ultra.toLowerCase().indexOf(s[0].toLowerCase());
+    const leftWin = ultra.slice(Math.max(0, sIndex - 300), sIndex); // 在 scale 前 300 字內找
+    const nums = [...leftWin.matchAll(/-?\d+(?:\.\d+)?/g)].map(m => parseFloat(m[0]));
+    if (nums.length) {
+      const cand = nums[nums.length - 1]; // 取最後一個（離 scale 最近）
+      // 合理身高範圍（可視實際調整）
+      if (cand > 0.5 && cand < 3.0) {
+        return { height: cand, scale: parseFloat(s[1]) };
+      }
+    }
+  }
+
   if (h && s) {
     return { height: parseFloat(h[1]), scale: parseFloat(s[1]) };
   }
 
-  // 失敗才顯示片段做偵錯
   throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 600));
 }
+
 function runSingle(){
   const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
   try{const {height,scale}=parseHeightScaleFromUrl(url);const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
