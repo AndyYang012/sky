@@ -225,20 +225,20 @@ function findHeightScale(obj){
     for(const k in obj){const r=findHeightScale(obj[k]);if(r) return r;}}
   return null;
 }
-// 取代整個 parseHeightScaleFromUrl
+// 直接取代整個 parseHeightScaleFromUrl
 function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const text  = b64urlToText(token);
 
-  // 移除非 ASCII，避免控制碼干擾
-  const ascii = text.replace(/[^\x20-\x7E]/g, ' ');
+  // 先保留可見 ASCII，避免控制碼干擾；原始字串也留著做全文 fallback
+  const ultra = text.replace(/[^\x20-\x7E]/g, ' ');
 
   // 超寬鬆 key 正規化（h...e...i...g...h...t / s...c...a...l...e）
   const normalizeKeys = s => s
     .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
     .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
 
-  const normalized = normalizeKeys(ascii).replace(/\s+/g, ' ');
+  const normalized = normalizeKeys(ultra).replace(/\s+/g, ' ');
 
   // 數字樣式：允許 123、123.45、.45（無前置 0）
   const NUM = '(-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))';
@@ -255,33 +255,44 @@ function parseHeightScaleFromUrl(input){
   if (!hMatch) hMatch = normalized.match(new RegExp('\\bheight\\b[^0-9-]{0,1000}' + NUM, 'i'));
   if (!sMatch) sMatch = normalized.match(new RegExp('\\bscale\\b[^0-9-]{0,1000}'  + NUM, 'i'));
 
-  // ---- scale 雙候選補點（處理 "scale 078758337" / ".123" 之類）----
-  if (sMatch) {
-    let raw = sMatch[1];
-    if (raw.startsWith('.')) raw = '0' + raw;      // ".123" -> "0.123"
-    let sVal = parseFloat(raw);
-
-    if (sVal >= 0.2) { // 太大則嘗試 0ddddddd 形式的補點
-      const m = normalized.match(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/i);
-      if (m) {
-        const digits = m[1];                         // e.g. 078758337
-        const cand1 = parseFloat('0.'  + digits.slice(1)); // 0.78758337
-        const cand2 = parseFloat('0.0' + digits.slice(1)); // 0.078758337
-        // 優先選較合理的 < 0.2
-        if (cand2 < 0.2)      sMatch = [m[0], String(cand2)];
-        else if (cand1 < 0.2) sMatch = [m[0], String(cand1)];
-        else                  sMatch = [m[0], String(cand1)];
-      }
-    }
+  // 2a) 特判：亂碼提示 "@eigh) .93102789" → 當作 height
+  if (!hMatch) {
+    const hm = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+    if (hm) hMatch = [hm[0], hm[1]];
   }
 
+  // ---- scale 雙候選補點（處理 "scale 078758337" / ".123"）----
+  const fixScaleCandidate = (sValRaw, sourceForDigits) => {
+    let raw = sValRaw;
+    if (raw.startsWith('.')) raw = '0' + raw;   // ".123" -> "0.123"
+    let sVal = parseFloat(raw);
+    if (isFinite(sVal) && sVal < 0.2) return String(sVal);
+
+    // 嘗試從文字裡抓 0ddddddd 型式（小數點被吞）
+    const m = sourceForDigits.match(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/i);
+    if (m) {
+      const digits = m[1];                                  // 078758337
+      const cand1 = parseFloat('0.'  + digits.slice(1));    // 0.78758337
+      const cand2 = parseFloat('0.0' + digits.slice(1));    // 0.078758337
+      if (cand2 < 0.2) return String(cand2);
+      if (cand1 < 0.2) return String(cand1);
+      return String(cand1); // 退而求其次
+    }
+    return String(sVal); // 沒抓到 digits 就用原值
+  };
+
+  if (sMatch) {
+    sMatch = [sMatch[0], fixScaleCandidate(sMatch[1], normalized)];
+  }
+
+  // h+s 都齊全 → 回傳
   if (hMatch && sMatch) {
     const hVal = parseFloat(hMatch[1].startsWith('.') ? '0' + hMatch[1] : hMatch[1]);
     const sVal = parseFloat(sMatch[1].startsWith('.') ? '0' + sMatch[1] : sMatch[1]);
     return { height: hVal, scale: sVal };
   }
 
-  // 3) 掃 JSON 區塊（原本流程；嘗試直接 parse/清理後 parse/修復 key 後 parse）
+  // 3) 掃 JSON 區塊（原流程）
   const blocks = scanJsonBlocks(text);
   for (const js of blocks) {
     try {
@@ -303,39 +314,31 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  // 4) 全文保底搜尋
-  const ultra = ascii.replace(/[^\x20-\x7E]/g, ' ');
+  // 4) 全文保底
   let h = ultra.match(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'i')) ||
           ultra.match(new RegExp('\\bheight\\b\\s*[:=]?\\s*' + NUM, 'i'));
   let s = ultra.match(new RegExp('\\bscale\\b[^0-9-]{0,1500}'  + NUM, 'i')) ||
           ultra.match(new RegExp('\\bscale\\b\\s*[:=]?\\s*'  + NUM, 'i'));
 
-  // 全文也做一次 scale 雙候選補點
-  if (s) {
-    let raw = s[1];
-    if (raw.startsWith('.')) raw = '0' + raw;
-    let sVal = parseFloat(raw);
-    if (sVal >= 0.2) {
-      const m2 = ultra.match(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/i);
-      if (m2) {
-        const digits = m2[1];
-        const cand1 = parseFloat('0.'  + digits.slice(1));
-        const cand2 = parseFloat('0.0' + digits.slice(1));
-        if (cand2 < 0.2)      s = [m2[0], String(cand2)];
-        else if (cand1 < 0.2) s = [m2[0], String(cand1)];
-        else                  s = [m2[0], String(cand1)];
-      }
-    }
+  // 4a) 再做一次 "@eigh)" 特判
+  if (!h) {
+    const hm2 = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+    if (hm2) h = [hm2[0], hm2[1]];
   }
 
-  // 只抓到 scale：在 scale 前 300 字內找最近數字當 height（允許 ".123"）
+  // 4b) 全文也做 scale 雙候選補點
+  if (s) {
+    s = [s[0], fixScaleCandidate(s[1], ultra)];
+  }
+
+  // 4c) 若只抓到 scale → 在 scale 前 300 字找最近數字當 height（允許 ".123"）
   if (!h && s) {
     const sIdx = ultra.indexOf(s[0]);
     const leftWin = ultra.slice(Math.max(0, sIdx - 300), sIdx);
     const nums = [...leftWin.matchAll(/-?(?:\d+(?:\.\d+)?|\.\d+)/g)].map(m => m[0]);
     if (nums.length) {
       let cand = nums[nums.length - 1];
-      if (cand.startsWith('.')) cand = '0' + cand;
+      if (cand.startsWith('.')) cand = '0' + cand; // .931 → 0.931
       const hVal = parseFloat(cand);
       const sVal = parseFloat(s[1].startsWith('.') ? '0' + s[1] : s[1]);
       if (hVal > 0.5 && hVal < 3.0) {
@@ -350,7 +353,6 @@ function parseHeightScaleFromUrl(input){
     return { height: hVal, scale: sVal };
   }
 
-  // 仍失敗：輸出片段協助偵錯
   throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 600));
 }
 
