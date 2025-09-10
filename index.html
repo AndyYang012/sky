@@ -228,8 +228,20 @@ function findHeightScale(obj){
 function parseHeightScaleFromUrl(input){
   const token=extractOToken(input);const text=b64urlToText(token);
   const ascii=text.replace(/[^\x20-\x7E]/g," ");
-  const hMatch=ascii.match(/h[eE]i[gG]h[tT][^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
-  const sMatch=ascii.match(/s[cC]a[lL]e[^0-9\-]{0,10}(-?\d+(?:\.\d+)?)/);
+  // 先把被插雜字的 key 正規化，例如 h e i g h t → height、s c a l e → scale
+  const normalized = ascii
+  .replace(/h[^a-zA-Z]*e[^a-zA-Z]*i[^a-zA-Z]*g[^a-zA-Z]*h[^a-zA-Z]*t/gi, 'height')
+  .replace(/s[^a-zA-Z]*c[^a-zA-Z]*a[^a-zA-Z]*l[^a-zA-Z]*e/gi, 'scale');
+
+  // 再把多餘空白縮掉，避免數字被隔太遠
+  const norm2 = normalized.replace(/\s+/g, ' ');
+
+  // 容許更長距離（最多 80 個非數字字元）或是標準 "height": 1.23 的寫法
+  const num = '(-?\\d+(?:\\.\\d+)?)';
+  const hMatch = norm2.match(new RegExp('height[^0-9-]{0,80}' + num, 'i')) ||
+               norm2.match(new RegExp('"height"\\s*:\\s*' + num, 'i'));
+  const sMatch = norm2.match(new RegExp('scale[^0-9-]{0,80}' + num, 'i')) ||
+               norm2.match(new RegExp('"scale"\\s*:\\s*' + num, 'i'));
   if(hMatch&&sMatch){return {height:parseFloat(hMatch[1]),scale:parseFloat(sMatch[1])};}
   const blocks=scanJsonBlocks(text);
   for(const js of blocks){
