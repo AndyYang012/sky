@@ -226,29 +226,60 @@ function findHeightScale(obj){
   return null;
 }
 function parseHeightScaleFromUrl(input){
-  const token=extractOToken(input);const text=b64urlToText(token);
-  const ascii=text.replace(/[^\x20-\x7E]/g," ");
-  // 先把被插雜字的 key 正規化，例如 h e i g h t → height、s c a l e → scale
-  const normalized = ascii
-  .replace(/h[^a-zA-Z]*e[^a-zA-Z]*i[^a-zA-Z]*g[^a-zA-Z]*h[^a-zA-Z]*t/gi, 'height')
-  .replace(/s[^a-zA-Z]*c[^a-zA-Z]*a[^a-zA-Z]*l[^a-zA-Z]*e/gi, 'scale');
+  const token = extractOToken(input);
+  const text  = b64urlToText(token);
 
-  // 再把多餘空白縮掉，避免數字被隔太遠
-  const norm2 = normalized.replace(/\s+/g, ' ');
+  // 先把非 ASCII 清掉，免得干擾
+  const ascii = text.replace(/[^\x20-\x7E]/g, ' ');
 
-  // 容許更長距離（最多 80 個非數字字元）或是標準 "height": 1.23 的寫法
-  const num = '(-?\\d+(?:\\.\\d+)?)';
-  const hMatch = norm2.match(new RegExp('height[^0-9-]{0,80}' + num, 'i')) ||
-               norm2.match(new RegExp('"height"\\s*:\\s*' + num, 'i'));
-  const sMatch = norm2.match(new RegExp('scale[^0-9-]{0,80}' + num, 'i')) ||
-               norm2.match(new RegExp('"scale"\\s*:\\s*' + num, 'i'));
-  if(hMatch&&sMatch){return {height:parseFloat(hMatch[1]),scale:parseFloat(sMatch[1])};}
-  const blocks=scanJsonBlocks(text);
-  for(const js of blocks){
-    try{const data=JSON.parse(js);const r=findHeightScale(data);if(r) return r;}catch{}
-    try{const cleaned=js.replace(/[^\x20-\x7E]/g," ");const data2=JSON.parse(cleaned);const r2=findHeightScale(data2);if(r2) return r2;}catch{}
+  // 1) 把被插亂字的 key 正規化（允許中間任意字元，盡量兇狠）
+  //    如： hXXeYYYiZZgAAhBBt  -> height
+  const normalizeKeys = s => s
+    .replace(/h.{0,6}?e.{0,6}?i.{0,6}?g.{0,6}?h.{0,6}?t/gi, 'height')
+    .replace(/s.{0,6}?c.{0,6}?a.{0,6}?l.{0,6}?e/gi, 'scale');
+
+  const normalized = normalizeKeys(ascii).replace(/\s+/g, ' ');
+
+  // 2) 先試「字典式」寫法："height": 1.23 / 'height':1.23
+  const NUM = '(-?\\d+(?:\\.\\d+)?)';
+  let hMatch = normalized.match(new RegExp('[\'"]height[\'"]\\s*:\\s*' + NUM, 'i'));
+  let sMatch = normalized.match(new RegExp('[\'"]scale[\'"]\\s*:\\s*' + NUM, 'i'));
+
+  // 3) 再試更寬鬆寫法：height ……(≤200字)…… 數字
+  if (!hMatch) hMatch = normalized.match(new RegExp('height[^0-9-]{0,200}' + NUM, 'i'));
+  if (!sMatch) sMatch = normalized.match(new RegExp('scale[^0-9-]{0,200}' + NUM, 'i'));
+
+  if (hMatch && sMatch) {
+    return { height: parseFloat(hMatch[1]), scale: parseFloat(sMatch[1]) };
   }
-  throw new Error("找不到 JSON 或 height/scale\n片段: "+ascii.slice(0,200));
+
+  // 4) 還不行就掃 JSON 區塊試著 parse（保留原本邏輯）
+  const blocks = scanJsonBlocks(text);
+  for (const js of blocks) {
+    // 4a. 直接 parse
+    try {
+      const data = JSON.parse(js);
+      const r = findHeightScale(data);
+      if (r) return r;
+    } catch {}
+    // 4b. 清掉非 ASCII 再 parse
+    try {
+      const cleaned = js.replace(/[^\x20-\x7E]/g, ' ');
+      const data2 = JSON.parse(cleaned);
+      const r2 = findHeightScale(data2);
+      if (r2) return r2;
+    } catch {}
+    // 4c. 連 key 都被打散 → 先把打散的 key 換回來再 parse
+    try {
+      const repaired = normalizeKeys(js);
+      const data3 = JSON.parse(repaired);
+      const r3 = findHeightScale(data3);
+      if (r3) return r3;
+    } catch {}
+  }
+
+  // 5) 仍失敗就丟出錯誤（顯示前 200 字方便你偵錯）
+  throw new Error('找不到 JSON 或 height/scale\n片段: ' + normalized.slice(0, 200));
 }
 function runSingle(){
   const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
