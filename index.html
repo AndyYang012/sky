@@ -47,7 +47,7 @@
       <p>步驟3：貼到下方輸入框，點「解析」。</p>
     </section>
 
-    <!-- 單筆 -->
+    <!-- 單一連結 -->
     <section class="card">
       <h2>單一連結</h2>
       <div class="row">
@@ -60,7 +60,7 @@
       <div id="singleResult" style="margin-top:10px"></div>
     </section>
 
-    <!-- 多條（批次） -->
+    <!-- 多條連結 -->
     <section class="card">
       <h2>多條連結（每行一條）</h2>
       <textarea id="batchInput" rows="6" placeholder="每行貼一條網址 / o=... / token"></textarea>
@@ -77,32 +77,34 @@
   </div>
 
   <script>
-    /* ========== 解析工具（強化） ========== */
+    /* ========== 強化：Token 抽取 ========== */
     function getToken(input){
       if(!input) return '';
-      let s = input.trim();
-      try{ s = decodeURIComponent(s); }catch{}
-      // URL ?o= 或 hash 片段
+      let s = String(input).trim();
+      try{ s = decodeURIComponent(s); }catch(_){}
+      // URL 的 query 或 hash 內的 o=
       try{
         const u = new URL(s);
         const q = u.searchParams.get('o') || u.searchParams.get('O');
         if (q) return q;
-        if (u.hash && /o=/.test(u.hash)){
-          const m = u.hash.match(/o=([A-Za-z0-9\-_+=/]+)/);
+        if (u.hash){
+          const m = u.hash.match(/(?:^|[#?&])o=([A-Za-z0-9\-_+=/]+)/);
           if (m) return m[1];
         }
-      }catch{}
-      // 文本中含 o=
-      const m2 = s.match(/(?:\bo=)([A-Za-z0-9\-_+=/]+)/);
+      }catch(_){}
+      // 純文字裡的 o=
+      const m2 = s.match(/(?:^|[?#&\s])o=([A-Za-z0-9\-_+=/]+)/);
       if (m2) return m2[1];
-      // 純 token
+      // 看起來像 base64url 的 token
       if (/^[A-Za-z0-9\-_+=/]+$/.test(s)) return s;
       // 已解碼原文
       return s;
     }
 
+    /* ========== 強化：Base64URL 解碼 ========== */
     function b64urlToBytes(b64url){
-      let b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+      let clean = (b64url||'').replace(/[^A-Za-z0-9\-_+=/]/g,'');
+      let b64 = clean.replace(/-/g,'+').replace(/_/g,'/');
       const pad = b64.length % 4; if (pad) b64 += '='.repeat(4-pad);
       const bin = atob(b64);
       const out = new Uint8Array(bin.length);
@@ -114,38 +116,46 @@
       catch{ return Array.from(bytes).map(c=>String.fromCharCode(c)).join(''); }
     }
 
-    // 在雜訊中撈出數值（允許負號與科學記號）
+    /* ========== 強化：抽取 height / scale ========== */
     function pickHeightScale(text){
-      if(!text) return null;
+      if (!text) return null;
       const num = '(-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?)';
-      let mh = text.match(new RegExp('["#]?height"\\s*:\\s*'+num,'i'));
-      let ms = text.match(new RegExp('"scale"\\s*:\\s*'+num,'i'));
-      if(!mh) mh = text.match(new RegExp('[h#]eight\\s*[:\\s]\\s*'+num,'i'));
-      if(!ms) ms = text.match(new RegExp('\\bscale\\s*[:\\s]\\s*'+num,'i'));
-      if(!mh || !ms) return null;
+      let mh = text.match(new RegExp('["#]?height"\\s*[:=]\\s*'+num,'i'));
+      let ms = text.match(new RegExp('"scale"\\s*[:=]\\s*'+num,'i'));
+      if (!mh) mh = text.match(new RegExp('[h#]eight\\s*[:=\\s]\\s*'+num,'i'));
+      if (!ms) ms = text.match(new RegExp('\\bscale\\s*[:=\\s]\\s*'+num,'i'));
+      if (!mh || !ms) return null;
       const h = parseFloat(mh[1]), s = parseFloat(ms[1]);
-      if(!isFinite(h)||!isFinite(s)) return null;
+      if (!isFinite(h) || !isFinite(s)) return null;
       return {height:h, scale:s};
     }
 
-    // 一行解析（最多嘗試 2 層 base64url）
+    /* ========== 一行解析（多路徑、最多 4 層） ========== */
     function parseLine(line){
-      if(!line) return null;
+      if (!line) return null;
       let cur = getToken(line);
 
-      // 已是原文且含關鍵字
-      if(/height|scale/i.test(cur) && !/^[A-Za-z0-9\-_+=/]+$/.test(cur)){
+      // A) 已是原文
+      if (/height|scale/i.test(cur) && !/^[A-Za-z0-9\-_+=/]+$/.test(cur)){
         const r0 = pickHeightScale(cur);
         if (r0) return r0;
       }
-      for(let i=0;i<2;i++){
+      // B) Base64URL 逐層解
+      for (let i=0; i<4; i++){
         try{
           const txt = bytesToString(b64urlToBytes(cur));
           const r = pickHeightScale(txt);
           if (r) return r;
-          cur = txt; // 再往下一層試
-        }catch{ break; }
+          cur = txt; // 繼續下一層
+        }catch(_){ break; }
       }
+      // C) 再試一次 decodeURIComponent 後解碼
+      try{
+        const again = decodeURIComponent(cur);
+        const txt2 = bytesToString(b64urlToBytes(again));
+        const r2 = pickHeightScale(txt2);
+        if (r2) return r2;
+      }catch(_){}
       return null;
     }
 
@@ -177,8 +187,8 @@
       document.getElementById('singleResult').innerHTML = renderResult(res);
     }
     function clearSingle(){
-      document.getElementById('singleInput').value = '';
-      document.getElementById('singleResult').innerHTML = '';
+      document.getElementById('singleInput').value='';
+      document.getElementById('singleResult').innerHTML='';
     }
 
     function parseBatch(){
@@ -206,8 +216,8 @@
       document.getElementById('batchResult').innerHTML = html;
     }
     function clearBatch(){
-      document.getElementById('batchInput').value = '';
-      document.getElementById('batchResult').innerHTML = '';
+      document.getElementById('batchInput').value='';
+      document.getElementById('batchResult').innerHTML='';
     }
   </script>
 </body>
