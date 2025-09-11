@@ -26,6 +26,7 @@
     th,td{border:1px solid #e8edf3;padding:10px;text-align:center}
     th{background:#f7f9fc}
     .muted{color:var(--muted)} .warn{color:var(--warn);font-weight:700}
+    .error-box{background:#fff3f3;border:1px solid #f5b5b5;color:#b20000;padding:10px;border-radius:10px;margin-top:10px;font-size:14px;white-space:pre-wrap}
     .guide figure{margin:0}
     .guide img{width:100%;border-radius:12px;display:block}
     .guide figcaption{color:var(--muted);font-size:14px;text-align:center;margin-top:8px}
@@ -77,31 +78,29 @@
   </div>
 
   <script>
-    /* ========== 強化：Token 抽取 ========== */
-    function getToken(input){
+    function renderError(msg, detail){
+      return `<div class="error-box"><b>${msg}</b>\n${detail||''}</div>`;
+    }
+
+    function getToken(input, log){
       if(!input) return '';
       let s = String(input).trim();
-      try{ s = decodeURIComponent(s); }catch(_){}
-      // URL 的 query 或 hash 內的 o=
+      try{ s = decodeURIComponent(s); }catch(e){ log.push("decodeURIComponent 失敗: "+e); }
       try{
         const u = new URL(s);
         const q = u.searchParams.get('o') || u.searchParams.get('O');
         if (q) return q;
         if (u.hash){
-          const m = u.hash.match(/(?:^|[#?&])o=([A-Za-z0-9\-_+=/]+)/);
+          const m = u.hash.match(/o=([A-Za-z0-9\-_+=/]+)/);
           if (m) return m[1];
         }
-      }catch(_){}
-      // 純文字裡的 o=
+      }catch(e){ log.push("URL parse 失敗: "+e); }
       const m2 = s.match(/(?:^|[?#&\s])o=([A-Za-z0-9\-_+=/]+)/);
       if (m2) return m2[1];
-      // 看起來像 base64url 的 token
       if (/^[A-Za-z0-9\-_+=/]+$/.test(s)) return s;
-      // 已解碼原文
       return s;
     }
 
-    /* ========== 強化：Base64URL 解碼 ========== */
     function b64urlToBytes(b64url){
       let clean = (b64url||'').replace(/[^A-Za-z0-9\-_+=/]/g,'');
       let b64 = clean.replace(/-/g,'+').replace(/_/g,'/');
@@ -116,54 +115,50 @@
       catch{ return Array.from(bytes).map(c=>String.fromCharCode(c)).join(''); }
     }
 
-    /* ========== 強化：抽取 height / scale ========== */
     function pickHeightScale(text){
       if (!text) return null;
       const num = '(-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?)';
       let mh = text.match(new RegExp('["#]?height"\\s*[:=]\\s*'+num,'i'));
       let ms = text.match(new RegExp('"scale"\\s*[:=]\\s*'+num,'i'));
-      if (!mh) mh = text.match(new RegExp('[h#]eight\\s*[:=\\s]\\s*'+num,'i'));
-      if (!ms) ms = text.match(new RegExp('\\bscale\\s*[:=\\s]\\s*'+num,'i'));
-      if (!mh || !ms) return null;
-      const h = parseFloat(mh[1]), s = parseFloat(ms[1]);
-      if (!isFinite(h) || !isFinite(s)) return null;
-      return {height:h, scale:s};
+      if(!mh || !ms) return null;
+      return {height:parseFloat(mh[1]), scale:parseFloat(ms[1])};
     }
 
-    /* ========== 一行解析（多路徑、最多 4 層） ========== */
-    function parseLine(line){
+    function parseLine(line, log){
       if (!line) return null;
-      let cur = getToken(line);
+      let cur = getToken(line, log);
 
-      // A) 已是原文
       if (/height|scale/i.test(cur) && !/^[A-Za-z0-9\-_+=/]+$/.test(cur)){
         const r0 = pickHeightScale(cur);
         if (r0) return r0;
+        log.push("原文內找不到 height/scale");
       }
-      // B) Base64URL 逐層解
+
       for (let i=0; i<4; i++){
         try{
           const txt = bytesToString(b64urlToBytes(cur));
           const r = pickHeightScale(txt);
           if (r) return r;
-          cur = txt; // 繼續下一層
-        }catch(_){ break; }
+          cur = txt;
+        }catch(e){ log.push("base64 第"+(i+1)+"層失敗: "+e); break; }
       }
-      // C) 再試一次 decodeURIComponent 後解碼
+
       try{
         const again = decodeURIComponent(cur);
         const txt2 = bytesToString(b64urlToBytes(again));
         const r2 = pickHeightScale(txt2);
         if (r2) return r2;
-      }catch(_){}
+      }catch(e){ log.push("decodeURIComponent 後再解碼失敗: "+e); }
+
       return null;
     }
 
-    /* ========== 計算與渲染 ========== */
     const calc = (H,S)=> 7.6 - 8.3*S - 3*H;
 
-    function renderResult(res){
-      if(!res) return `<p class="warn">⚠️ 無效數值，無法計算身高</p>`;
+    function renderResult(res, log){
+      if(!res){
+        return renderError("⚠️ 無效數值，無法計算身高", log.join("\n"));
+      }
       const {height,scale} = res;
       const now = calc(height,scale);
       const top = calc(2,scale);
@@ -177,48 +172,37 @@
           <tr><td>最高(h=2)</td><td>${top.toFixed(10)}</td></tr>
           <tr><td>最低(h=-2)</td><td>${low.toFixed(10)}</td></tr>
         </table>
-        <p class="muted">提示：新帳號若未在衣櫃存檔，height/scale 可能異常，請在衣櫃切換身高後重產 QR。</p>
+        <div class="error-box">${log.length?log.join("\n"):"無錯誤"}</div>
       `;
     }
 
     function parseSingle(){
+      const log=[];
       const input = document.getElementById('singleInput').value.trim();
-      const res = parseLine(input);
-      document.getElementById('singleResult').innerHTML = renderResult(res);
+      const res = parseLine(input, log);
+      document.getElementById('singleResult').innerHTML = renderResult(res, log);
     }
-    function clearSingle(){
-      document.getElementById('singleInput').value='';
-      document.getElementById('singleResult').innerHTML='';
-    }
+    function clearSingle(){document.getElementById('singleInput').value='';document.getElementById('singleResult').innerHTML='';}
 
     function parseBatch(){
-      const lines = document.getElementById('batchInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
-      let html = '<table><tr><th>#</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th></tr>';
+      const lines=document.getElementById('batchInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      let html='<table><tr><th>#</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>錯誤</th></tr>';
       lines.forEach((line,i)=>{
-        const r = parseLine(line);
-        if (r){
-          const now = calc(r.height,r.scale);
-          const top = calc(2,r.scale);
-          const low = calc(-2,r.scale);
-          html += `<tr>
-            <td>${i+1}</td>
-            <td>${r.height}</td>
-            <td>${r.scale}</td>
-            <td>${now.toFixed(10)}</td>
-            <td>${top.toFixed(10)}</td>
-            <td>${low.toFixed(10)}</td>
+        const log=[]; const r=parseLine(line,log);
+        if(r){
+          const now=calc(r.height,r.scale), top=calc(2,r.scale), low=calc(-2,r.scale);
+          html+=`<tr>
+            <td>${i+1}</td><td>${r.height}</td><td>${r.scale}</td>
+            <td>${now.toFixed(6)}</td><td>${top.toFixed(6)}</td><td>${low.toFixed(6)}</td>
+            <td style="text-align:left;font-size:12px">${log.join("<br>")||"—"}</td>
           </tr>`;
         }else{
-          html += `<tr><td>${i+1}</td><td colspan="5" class="warn">⚠️ 無效數值</td></tr>`;
+          html+=`<tr><td>${i+1}</td><td colspan="6" class="warn">⚠️ 無效數值<br>${log.join("<br>")}</td></tr>`;
         }
       });
-      html += '</table>';
-      document.getElementById('batchResult').innerHTML = html;
+      html+='</table>'; document.getElementById('batchResult').innerHTML=html;
     }
-    function clearBatch(){
-      document.getElementById('batchInput').value='';
-      document.getElementById('batchResult').innerHTML='';
-    }
+    function clearBatch(){document.getElementById('batchInput').value='';document.getElementById('batchResult').innerHTML='';}
   </script>
 </body>
 </html>
