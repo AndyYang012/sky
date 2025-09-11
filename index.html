@@ -6,53 +6,32 @@
   <title>光遇身高查詢</title>
   <style>
     :root{
-      --bg1:#cfe9ff;
-      --bg2:#ffffff;
-      --card:#ffffff;
-      --ink:#2c3e50;
-      --muted:#6b7b8c;
-      --accent:#2d8cf0;
-      --accent-2:#1b6ec4;
-      --warn:#e74c3c;
-      --shadow:0 8px 24px rgba(0,0,0,.08);
-      --radius:14px;
+      --bg1:#cfe9ff; --bg2:#ffffff; --card:#ffffff;
+      --ink:#2c3e50; --muted:#6b7b8c;
+      --accent:#2d8cf0; --accent-2:#1b6ec4;
+      --warn:#e74c3c; --ok:#2ecc71;
+      --shadow:0 8px 24px rgba(0,0,0,.08); --radius:14px; --bd:#d7e0ea;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","Apple Color Emoji","Segoe UI Emoji",sans-serif;
-      color:var(--ink);
-      background:linear-gradient(180deg,var(--bg1),var(--bg2));
-    }
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","Apple Color Emoji","Segoe UI Emoji",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--bg1),var(--bg2))}
     h1{margin:16px 0 0;text-align:center;font-weight:800;letter-spacing:.06em}
     .container{max-width:980px;margin:0 auto;padding:16px}
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:20px;
-      margin:16px 0;
-    }
-    .guide figure{margin:0}
-    .guide img{width:100%;border-radius:12px;display:block}
-    .guide figcaption{color:var(--muted);font-size:14px;text-align:center;margin-top:8px}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin:16px 0;border:1px solid var(--bd)}
     .row{display:flex;gap:12px;flex-wrap:wrap}
-    input,textarea{
-      width:100%;padding:12px 14px;border:1px solid #d7e0ea;border-radius:10px;
-      outline:none;font-size:16px;background:#fafcff;
-    }
+    input,textarea,select{width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:10px;outline:none;font-size:16px;background:#fafcff}
     textarea{resize:vertical}
-    button{
-      appearance:none;border:none;border-radius:10px;padding:12px 16px;
-      background:var(--accent);color:#fff;font-weight:700;cursor:pointer
-    }
+    button{appearance:none;border:none;border-radius:10px;padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
     button:hover{background:var(--accent-2)}
     .btn-ghost{background:#eef6ff;color:var(--accent-2)}
+    .btn-outline{background:#fff;color:var(--accent-2);border:1px solid var(--accent-2)}
     table{width:100%;border-collapse:collapse;margin-top:14px}
     th,td{border:1px solid #e8edf3;padding:10px;text-align:center}
     th{background:#f7f9fc}
-    .muted{color:var(--muted)}
-    .warn{color:var(--warn);font-weight:700}
+    .muted{color:var(--muted)} .warn{color:var(--warn);font-weight:700}
+    .kpi{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+    .pill{flex:1 1 160px;border:1px dashed #cfe0ff;border-radius:12px;padding:10px 12px;background:#f7fbff}
+    .pill .label{font-size:12px;color:#5b6b7c}
+    .pill .val{font-size:18px;font-weight:800;letter-spacing:.02em}
     footer{padding:24px 0 48px;text-align:center;color:var(--muted);font-size:14px}
   </style>
 </head>
@@ -60,209 +39,217 @@
   <div class="container">
     <h1>光遇身高查詢</h1>
 
-    <!-- 教學 -->
-    <section class="card guide">
-      <h2>使用教學</h2>
-      <figure>
-        <img src="IMG_3171.jpeg" alt="教學畫面">
-        <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
-      </figure>
-      <p>步驟2：掃描 QRcode，複製網址</p>
-      <p>步驟3：貼到下方輸入框，點「解析」</p>
-    </section>
-
     <!-- 單筆 -->
     <section class="card">
       <h2>單一連結</h2>
       <div class="row">
-        <input id="singleInput" placeholder="貼上網址 / o=... / token" />
+        <input id="singleInput" placeholder="貼上網址 / o=... / token / 原文" />
         <div class="row" style="gap:8px">
           <button onclick="parseSingle()">解析</button>
           <button class="btn-ghost" onclick="clearSingle()">清除</button>
         </div>
       </div>
+
+      <details style="margin-top:8px">
+        <summary>顯示設定</summary>
+        <div class="row">
+          <div style="flex:1 1 160px">
+            <label class="muted">小數位數</label>
+            <input id="decimals" type="number" min="0" max="10" step="1" value="6">
+          </div>
+          <div style="flex:1 1 160px">
+            <label class="muted">單位（僅顯示）</label>
+            <select id="unit">
+              <option value="cm" selected>cm</option>
+              <option value="m">m</option>
+              <option value="px">px</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
       <div id="singleResult" style="margin-top:10px"></div>
     </section>
 
     <!-- 批次 -->
     <section class="card">
       <h2>批次解析</h2>
-      <textarea id="batchInput" rows="5" placeholder="每行貼一條網址 / o=... / token"></textarea>
+      <div class="row" style="align-items:center">
+        <input type="file" id="fileInput" accept=".txt" style="width:auto">
+        <div class="row" style="gap:8px">
+          <button class="btn-outline" id="btnExport">匯出 CSV</button>
+        </div>
+      </div>
+      <textarea id="batchInput" rows="6" placeholder="每行貼一條網址 / o=... / token / 原文"></textarea>
       <div class="row" style="gap:8px;margin-top:8px">
         <button onclick="parseBatch()">批次解析</button>
         <button class="btn-ghost" onclick="clearBatch()">清除</button>
       </div>
+
+      <div class="kpi">
+        <div class="pill"><div class="label">有效筆數</div><div class="val" id="kCnt">0</div></div>
+        <div class="pill"><div class="label">平均身高</div><div class="val" id="kAvg">—</div></div>
+        <div class="pill"><div class="label">最高</div><div class="val" id="kMax">—</div></div>
+        <div class="pill"><div class="label">最低</div><div class="val" id="kMin">—</div></div>
+      </div>
+
       <div id="batchResult"></div>
     </section>
 
     <footer>
-      製作者：言陌 🔥 ｜ 此網頁持續更新<br>
-      本工具與 thatgamecompany 無關，僅供玩家交流與學習使用
+      製作者：言陌 🔥 ｜ 本工具與 thatgamecompany 無關，僅供玩家交流與學習使用
     </footer>
   </div>
 
   <script>
-    /* =========================
-       解析工具（健壯版）
-       ========================= */
+    /* ========= 工具 ========= */
+    const $ = (id)=>document.getElementById(id);
+    const getDec = ()=> Math.max(0, Math.min(10, parseInt(($('decimals')?.value||'6'),10)||6));
+    const clampDec = (v,d)=> (isFinite(v)? Math.round(v*Math.pow(10,d))/Math.pow(10,d) : NaN);
+    function copy(text){ if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text); const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
 
-    // 從輸入取得 token（網址 / o=... / 純 token / 已解碼原文 都可）
-    function getToken(input) {
-      const s = input.trim();
-
-      // 1) URL ?o=
-      try {
+    // 取得 token（網址 / hash / 純 token / 原文）
+    function getToken(input){
+      if(!input) return '';
+      let s = input.trim();
+      try{ s = decodeURIComponent(s); }catch{}
+      try{
         const u = new URL(s);
-        const q = u.searchParams.get('o');
+        const q = u.searchParams.get('o') || u.searchParams.get('O');
         if (q) return q;
-      } catch(e) {}
-
-      // 2) 文本中含 o=
-      const m = s.match(/(?:\bo=)([A-Za-z0-9\-_+=/]+)/);
-      if (m) return m[1];
-
-      // 3) 純 token
+        if (u.hash && /o=/.test(u.hash)){
+          const m = u.hash.match(/o=([A-Za-z0-9\-_+=/]+)/);
+          if (m) return m[1];
+        }
+      }catch{}
+      const m2 = s.match(/(?:\bo=)([A-Za-z0-9\-_+=/]+)/);
+      if (m2) return m2[1];
       if (/^[A-Za-z0-9\-_+=/]+$/.test(s)) return s;
-
-      // 4) 可能是已經解開的原文（含 height/scale）
-      return s;
+      return s; // 已解碼原文
     }
 
     // base64url → bytes
-    function b64urlToBytes(b64url) {
-      let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
-      const pad = b64.length % 4;
-      if (pad) b64 += '='.repeat(4 - pad);
+    function b64urlToBytes(b64url){
+      let b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+      const pad = b64.length % 4; if(pad) b64 += '='.repeat(4-pad);
       const bin = atob(b64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
-      return bytes;
+      const out = new Uint8Array(bin.length);
+      for (let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+      return out;
+    }
+    // bytes → string
+    function bytesToString(bytes){
+      try{ return new TextDecoder('utf-8',{fatal:false}).decode(bytes); }
+      catch{ return Array.from(bytes).map(c=>String.fromCharCode(c)).join(''); }
     }
 
-    // bytes → string（UTF-8，失敗退 Latin-1）
-    function bytesToString(bytes) {
-      try {
-        return new TextDecoder('utf-8', {fatal:false}).decode(bytes);
-      } catch {
-        return Array.from(bytes).map(c => String.fromCharCode(c)).join('');
-      }
-    }
-
-    // 在雜訊中撈出 height / scale
-    function pickHeightScale(text) {
-      // 常見： "height":1.234 , "scale":0.02
-      let mh = text.match(/["#]?height"\s*:\s*(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)/i);
-      let ms = text.match(/"scale"\s*:\s*(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)/i);
-
-      // 寬鬆： height 1.234 / scale 0.02 / #eight:1.23
-      if (!mh) mh = text.match(/[h#]eight\s*[:\s]\s*(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)/i);
-      if (!ms) ms = text.match(/\bscale\s+(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)/i);
-
-      if (!mh || !ms) return null;
-
-      const h = parseFloat(mh[1]);
-      const s = parseFloat(ms[1]);
-      if (!isFinite(h) || !isFinite(s)) return null;
-
+    // 從字串撈出 height/scale（允許負號/科學記號）
+    function pickHeightScale(text){
+      if(!text) return null;
+      const num = '(-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?)';
+      let mh = text.match(new RegExp('["#]?height"\\s*:\\s*'+num,'i'));
+      let ms = text.match(new RegExp('"scale"\\s*:\\s*'+num,'i'));
+      if(!mh) mh = text.match(new RegExp('[h#]eight\\s*[:\\s]\\s*'+num,'i'));
+      if(!ms) ms = text.match(new RegExp('\\bscale\\s*[:\\s]\\s*'+num,'i'));
+      if(!mh || !ms) return null;
+      const h = parseFloat(mh[1]), s = parseFloat(ms[1]);
+      if(!isFinite(h)||!isFinite(s)) return null;
       return {height:h, scale:s};
     }
 
-    // 通用解析：一行輸入 → {height, scale} 或 null
-    function parseLine(line) {
-      if (!line) return null;
-      const tokenOrWhole = getToken(decodeURIComponent(line));
+    // 嘗試解析（一行）
+    function parseLine(line){
+      if(!line) return null;
+      let cur = getToken(line);
 
-      // 已是原文且含 height/scale
-      if (/height|scale/i.test(tokenOrWhole) && !/^[A-Za-z0-9\-_+=/]+$/.test(tokenOrWhole)) {
-        return pickHeightScale(tokenOrWhole);
+      // 已是原文
+      if(/height|scale/i.test(cur) && !/^[A-Za-z0-9\-_+=/]+$/.test(cur)){
+        const r0 = pickHeightScale(cur);
+        if (r0) return r0;
       }
-      // 當作 base64url 解
-      try {
-        const bytes = b64urlToBytes(tokenOrWhole);
-        const text  = bytesToString(bytes);
-        return pickHeightScale(text);
-      } catch {
-        return null;
+
+      // Base64URL 至多 2 層
+      for(let i=0;i<2;i++){
+        try{
+          const text = bytesToString(b64urlToBytes(cur));
+          const r = pickHeightScale(text);
+          if (r) return r;
+          cur = text;
+        }catch{ break; }
       }
+      return null;
     }
 
-    /* =========================
-       計算與渲染
-       ========================= */
+    /* ========= 計算與渲染 ========= */
+    const calc = (H,S)=> 7.6 - 8.3*S - 3*H;
 
-    // 身高公式：7.6 − 8.3×scale − 3×height
-    const calc = (H,S) => 7.6 - 8.3*S - 3*H;
-
-    function renderResult(res){
-      if (!res) return `<p class="warn">⚠️ 無效數值，無法計算身高</p>`;
-      const {height:h,scale:s} = res;
-      if (!isFinite(h)||!isFinite(s)) return `<p class="warn">⚠️ 無效數值，無法計算身高</p>`;
-
-      const now = calc(h,s);
-      const topVal = calc(2,s);   // 固定 h=2
-      const lowVal = calc(-2,s);  // 固定 h=-2
-
+    function renderSingle(h,s){
+      const d = getDec();
+      const now = calc(h,s), top = calc(2,s), low = calc(-2,s);
       return `
         <table>
           <tr><th>欄位</th><th>數值</th></tr>
           <tr><td>height</td><td>${h}</td></tr>
           <tr><td>scale</td><td>${s}</td></tr>
-          <tr><td>身高</td><td>${now.toFixed(6)}</td></tr>
-          <tr><td>最高 (h=2)</td><td>${topVal.toFixed(6)}</td></tr>
-          <tr><td>最低 (h=-2)</td><td>${lowVal.toFixed(6)}</td></tr>
+          <tr><td>身高</td><td>${now.toFixed(d)}</td></tr>
+          <tr><td>最高 (h=2)</td><td>${top.toFixed(d)}</td></tr>
+          <tr><td>最低 (h=-2)</td><td>${low.toFixed(d)}</td></tr>
         </table>
-        <p class="muted">⚠️ 提醒：新帳號若尚未進衣櫃存檔，height/scale 可能是異常值，請進衣櫃切換一次身高後重產 QR。</p>
+        <div class="row" style="gap:8px;margin-top:8px">
+          <button class="btn-outline" onclick="copy('${now.toFixed(d)}')">複製身高</button>
+        </div>
+        <p class="muted">提示：新帳號若未在衣櫃存檔，height/scale 可能異常，請在衣櫃切換身高後重產 QR。</p>
       `;
     }
 
-    /* =========================
-       單筆
-       ========================= */
     function parseSingle(){
-      const input = document.getElementById('singleInput').value.trim();
+      const input = $('singleInput').value.trim();
       const res = parseLine(input);
-      document.getElementById('singleResult').innerHTML = renderResult(res);
+      $('singleResult').innerHTML = res ? renderSingle(res.height,res.scale) : '<p class="warn">⚠️ 無效數值，無法計算身高</p>';
     }
-    function clearSingle(){
-      document.getElementById('singleInput').value='';
-      document.getElementById('singleResult').innerHTML='';
-    }
+    function clearSingle(){ $('singleInput').value=''; $('singleResult').innerHTML=''; }
 
-    /* =========================
-       批次
-       ========================= */
+    /* ========= 批次 ========= */
     function parseBatch(){
-      const lines = document.getElementById('batchInput').value
-        .split('\n').map(s=>s.trim()).filter(Boolean);
-
+      const lines = $('batchInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
       let html = '<table><tr><th>#</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th></tr>';
+      let n=0, sum=0, vmin=Infinity, vmax=-Infinity, d=getDec();
 
       lines.forEach((line,i)=>{
         const r = parseLine(line);
         if (r){
-          const now = calc(r.height,r.scale);
-          const topVal = calc(2,r.scale);
-          const lowVal = calc(-2,r.scale);
+          const now = calc(r.height, r.scale);
+          const top = calc(2, r.scale);
+          const low = calc(-2, r.scale);
           html += `<tr>
             <td>${i+1}</td>
             <td>${r.height}</td>
             <td>${r.scale}</td>
-            <td>${now.toFixed(6)}</td>
-            <td>${topVal.toFixed(6)}</td>
-            <td>${lowVal.toFixed(6)}</td>
+            <td>${now.toFixed(d)}</td>
+            <td>${top.toFixed(d)}</td>
+            <td>${low.toFixed(d)}</td>
           </tr>`;
+          n++; sum += now; if(now<vmin) vmin=now; if(now>vmax) vmax=now;
         }else{
           html += `<tr><td>${i+1}</td><td colspan="5" class="warn">⚠️ 無效數值</td></tr>`;
         }
       });
 
       html += '</table>';
-      document.getElementById('batchResult').innerHTML = html;
+      $('batchResult').innerHTML = html;
+      $('kCnt').textContent = String(n);
+      $('kAvg').textContent = n? clampDec(sum/n,d).toFixed(d) : '—';
+      $('kMax').textContent = isFinite(vmax)? vmax.toFixed(d) : '—';
+      $('kMin').textContent = isFinite(vmin)? vmin.toFixed(d) : '—';
     }
+
     function clearBatch(){
-      document.getElementById('batchInput').value='';
-      document.getElementById('batchResult').innerHTML='';
+      $('batchInput').value=''; $('batchResult').innerHTML='';
+      $('kCnt').textContent='0'; $('kAvg').textContent='—';
+      $('kMax').textContent='—'; $('kMin').textContent='—';
     }
-  </script>
-</body>
-</html>
+
+    // 匯入 txt（每行一筆）
+    $('fileInput').addEventListener('change', async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      const txt = await f.text(); $('batchInput').value = txt; parse
