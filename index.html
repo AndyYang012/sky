@@ -1,208 +1,401 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>光遇身高查詢</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
-    :root{
-      --bg1:#cfe9ff; --bg2:#ffffff; --card:#ffffff;
-      --ink:#2c3e50; --muted:#6b7b8c;
-      --accent:#2d8cf0; --accent-2:#1b6ec4;
-      --warn:#e74c3c; --shadow:0 8px 24px rgba(0,0,0,.08); --radius:14px;
-      --bd:#d7e0ea;
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC","PingFang TC",sans-serif;
+      background: linear-gradient(160deg,#a1c4fd 0%,#c2e9fb 100%);
+      color: #333;
+      line-height: 1.6;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","Apple Color Emoji","Segoe UI Emoji",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--bg1),var(--bg2))}
-    h1{margin:16px 0 0;text-align:center;font-weight:800;letter-spacing:.06em}
-    .container{max-width:980px;margin:0 auto;padding:16px}
-    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin:16px 0;border:1px solid var(--bd)}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    input,textarea{width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:10px;outline:none;font-size:16px;background:#fafcff}
-    button{appearance:none;border:none;border-radius:10px;padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    button:hover{background:var(--accent-2)}
-    .btn-ghost{background:#eef6ff;color:var(--accent-2)}
-    table{width:100%;border-collapse:collapse;margin-top:14px}
-    th,td{border:1px solid #e8edf3;padding:10px;text-align:center}
-    th{background:#f7f9fc}
-    .muted{color:var(--muted)} .warn{color:var(--warn);font-weight:700}
-    .error-box{background:#fff3f3;border:1px solid #f5b5b5;color:#b20000;padding:10px;border-radius:10px;margin-top:10px;font-size:14px;white-space:pre-wrap}
-    .guide figure{margin:0}
-    .guide img{width:100%;border-radius:12px;display:block}
-    .guide figcaption{color:var(--muted);font-size:14px;text-align:center;margin-top:8px}
-    footer{padding:24px 0 48px;text-align:center;color:var(--muted);font-size:14px}
+    h1 {
+      text-align: center;
+      padding: 20px;
+      font-size: 26px;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    h1 img {
+      height: 28px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .card {
+      background: rgba(255,255,255,0.85);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 700px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    label {font-weight: bold;color: #444;}
+    input,textarea {
+      width: 100%;padding: 12px;margin-top: 10px;
+      border-radius: 10px;border: 1px solid #ccc;font-size: 15px;
+      outline: none;transition: 0.2s;
+    }
+    input:focus,textarea:focus {
+      border-color: #6fa8dc;box-shadow: 0 0 8px rgba(111,168,220,0.4);
+    }
+    button {
+      padding: 10px;border: none;border-radius: 8px;
+      font-size: 15px;cursor: pointer;transition: 0.2s;
+    }
+    button.primary {background: linear-gradient(135deg,#6fa8dc,#3d85c6);color: white;}
+    button.primary:hover {background: linear-gradient(135deg,#5b96cc,#366fae);}
+    button.secondary {background: #fff;border: 1px solid #bbb;color: #333;}
+    button.secondary:hover {background: #f0f0f0;}
+    .row {display: grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    table {
+      width:100%;border-collapse:collapse;margin-top:15px;
+      background: rgba(255,255,255,0.9);border-radius: 10px;overflow:hidden;
+    }
+    th,td {padding:10px;text-align:center;border-bottom:1px solid #eee;}
+    th {background:#f8fbff;font-weight:bold;color:#333;}
+    .guide {max-width:900px;margin:20px auto;text-align:center;}
+    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);}
+    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
+    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+    .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
+    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
+    footer {
+      background: rgba(30, 60, 120, 0.9);
+      padding: 20px;
+      margin-top: 40px;
+    }
+    .footer-inner {
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .footer-inner b { color: #ffd966; }
+    #counter {
+      font-size: 15px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(0,0,0,0.4);
+      color: #fff;
+    }
+    .disclaimer {
+      font-size: 12px;
+      color: #ddd;
+      margin-top: 6px;
+    }
+    .updating {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #ffd966, #ff9a76, #ffd966);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glow 3s linear infinite;
+      text-shadow: 0 0 8px rgba(255, 215, 100, 0.6);
+      display: inline-block;
+    }
+    @keyframes glow {
+      0% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+      100% { background-position: 0% center; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>光遇身高查詢</h1>
+  <h1>
+    <img src="logo.jpeg" alt="logo">
+    光遇身高查詢
+  </h1>
 
-    <!-- 使用教學 -->
-    <section class="card guide">
-      <h2>使用教學</h2>
-      <figure>
-        <img src="IMG_3171.jpeg" alt="教學畫面" loading="lazy">
+  <!-- 教學 -->
+  <section class="guide">
+    <h2>使用教學</h2>
+    <div class="guide-grid">
+      <figure class="step" onclick="openPreview(this)">
+        <img src="IMG_3171.jpeg" alt="步驟1">
         <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
       </figure>
-      <p>步驟2：掃描 QRcode，複製網址（或 QR 內容內的 <code>o=...</code> token）。</p>
-      <p>步驟3：貼到下方輸入框，點「解析」。</p>
-    </section>
+      <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
+      <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
+    </div>
+  </section>
 
-    <!-- 單一連結 -->
-    <section class="card">
-      <h2>單一連結</h2>
-      <div class="row">
-        <input id="singleInput" placeholder="貼上網址 / o=... / token / 原文" />
-        <div class="row" style="gap:8px">
-          <button onclick="parseSingle()">解析</button>
-          <button class="btn-ghost" onclick="clearSingle()">清除</button>
-        </div>
-      </div>
-      <div id="singleResult" style="margin-top:10px"></div>
-    </section>
-
-    <!-- 多條連結 -->
-    <section class="card">
-      <h2>多條連結（每行一條）</h2>
-      <textarea id="batchInput" rows="6" placeholder="每行貼一條網址 / o=... / token"></textarea>
-      <div class="row" style="gap:8px;margin-top:8px">
-        <button onclick="parseBatch()">批次解析</button>
-        <button class="btn-ghost" onclick="clearBatch()">清除</button>
-      </div>
-      <div id="batchResult"></div>
-    </section>
-
-    <footer>
-      製作者：言陌 🔥 ｜ 本工具與 thatgamecompany 無關，僅供玩家交流與學習使用
-    </footer>
+  <!-- 單一 -->
+  <div class="card">
+    <label for="single">單一連結</label>
+    <input id="single" placeholder="貼上網址 / o=... / token">
+    <div class="row">
+      <button class="primary" onclick="runSingle()">解析</button>
+      <button class="secondary" onclick="clearSingle()">清除</button>
+    </div>
+    <div id="singleOut"></div>
   </div>
 
-  <script>
-    function renderError(msg, detail){
-      return `<div class="error-box"><b>${msg}</b>\n${detail||''}</div>`;
-    }
+  <!-- 批次 -->
+  <div class="card">
+    <label for="batch">多條連結（每行一條）</label>
+    <textarea id="batch" rows="5" placeholder="每行貼一條網址 / o=... / token"></textarea>
+    <div class="row">
+      <button class="primary" onclick="runBatch()">批次解析</button>
+      <button class="secondary" onclick="clearBatch()">清除</button>
+    </div>
+    <div id="batchOut"></div>
+  </div>
 
-    function getToken(input, log){
-      if(!input) return '';
-      let s = String(input).trim();
-      try{ s = decodeURIComponent(s); }catch(e){ log.push("decodeURIComponent 失敗: "+e); }
-      try{
-        const u = new URL(s);
-        const q = u.searchParams.get('o') || u.searchParams.get('O');
-        if (q) return q;
-        if (u.hash){
-          const m = u.hash.match(/o=([A-Za-z0-9\-_+=/]+)/);
-          if (m) return m[1];
-        }
-      }catch(e){ log.push("URL parse 失敗: "+e); }
-      const m2 = s.match(/(?:^|[?#&\s])o=([A-Za-z0-9\-_+=/]+)/);
-      if (m2) return m2[1];
-      if (/^[A-Za-z0-9\-_+=/]+$/.test(s)) return s;
-      return s;
-    }
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div id="counter">累積使用次數：載入中...</div>
+      <div>製作者：<b>言陌</b></div>
+      <div class="updating">🕯️ 此網頁持續更新</div>
+      <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+    </div>
+  </footer>
 
-    function b64urlToBytes(b64url){
-      let clean = (b64url||'').replace(/[^A-Za-z0-9\-_+=/]/g,'');
-      let b64 = clean.replace(/-/g,'+').replace(/_/g,'/');
-      const pad = b64.length % 4; if (pad) b64 += '='.repeat(4-pad);
-      const bin = atob(b64);
-      const out = new Uint8Array(bin.length);
-      for (let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
-      return out;
-    }
-    function bytesToString(bytes){
-      try{ return new TextDecoder('utf-8',{fatal:false}).decode(bytes); }
-      catch{ return Array.from(bytes).map(c=>String.fromCharCode(c)).join(''); }
-    }
+<script>
+/* --- 計數器 --- */
+(function () {
+  const el = document.getElementById('counter');
+  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
 
-    function pickHeightScale(text){
-      if (!text) return null;
-      const num = '(-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?)';
-      let mh = text.match(new RegExp('["#]?height"\\s*[:=]\\s*'+num,'i'));
-      let ms = text.match(new RegExp('"scale"\\s*[:=]\\s*'+num,'i'));
-      if(!mh || !ms) return null;
-      return {height:parseFloat(mh[1]), scale:parseFloat(ms[1])};
-    }
-
-    function parseLine(line, log){
-      if (!line) return null;
-      let cur = getToken(line, log);
-
-      if (/height|scale/i.test(cur) && !/^[A-Za-z0-9\-_+=/]+$/.test(cur)){
-        const r0 = pickHeightScale(cur);
-        if (r0) return r0;
-        log.push("原文內找不到 height/scale");
+  fetch(COUNTER_URL, { cache: 'no-cache' })
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(d => {
+      el.textContent = '累積使用次數：' + d.value;
+    })
+    .catch(err => {
+      try {
+        const k = 'local-visit-count';
+        const v = (parseInt(localStorage.getItem(k) || '0', 10) + 1);
+        localStorage.setItem(k, v);
+        el.textContent = '累積使用次數（本機）：' + v;
+      } catch (e) {
+        el.textContent = '累積使用次數：暫時無法取得';
       }
+      console.log('counter error:', err);
+    });
+})();
 
-      for (let i=0; i<4; i++){
-        try{
-          const txt = bytesToString(b64urlToBytes(cur));
-          const r = pickHeightScale(txt);
-          if (r) return r;
-          cur = txt;
-        }catch(e){ log.push("base64 第"+(i+1)+"層失敗: "+e); break; }
+/* --- 解析程式碼 (原本功能保持不變) --- */
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
+function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
+function extractOToken(input){
+  let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
+  const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
+  try{const u=new URL(s);const q=u.searchParams.get("o");if(q) return q;
+    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i);if(mPath) return mPath[1];}catch{}
+  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i);if(m) return m[1];
+  if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
+  throw new Error("找不到 o 參數");
+}
+function b64urlToText(token){
+  try{token=decodeURIComponent(token);}catch(e){}
+  let b64=token.replace(/-/g,'+').replace(/_/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
+  try{return atob(b64);}catch(e){}
+  try{const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i)&0xFF;return new TextDecoder('utf-8',{fatal:false}).decode(bytes);}catch(e){}
+  try{const bin=atob(b64);let cleaned='';for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}return cleaned;}catch(e){throw new Error('base64 解碼失敗');}
+}
+function scanJsonBlocks(text){
+  const collect=(s)=>{const blocks=[];let start=-1,depth=0,inStr=false,esc=false;
+    for(let i=0;i<s.length;i++){const ch=s[i];
+      if(start===-1){if(ch==='{'){start=i;depth=1;inStr=false;esc=false;}continue;}
+      if(esc){esc=false;continue;}
+      if(ch==='\\'){esc=true;continue;}
+      if(ch==='"'){inStr=!inStr;continue;}
+      if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
+    }return blocks;};
+  let blocks=collect(text);if(blocks.length) return blocks;
+  let cleaned='';for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';}return collect(cleaned);
+}
+function findHeightScale(obj){
+  if(obj&&typeof obj==="object"){if("height" in obj&&"scale" in obj) return {height:obj.height,scale:obj.scale};
+    for(const k in obj){const r=findHeightScale(obj[k]);if(r) return r;}}
+  return null;
+}
+// 直接取代整個 parseHeightScaleFromUrl
+function parseHeightScaleFromUrl(input){
+  const token = extractOToken(input);
+  const text  = b64urlToText(token);
+
+  // 先保留可見 ASCII，避免控制碼干擾；原始字串也留著做全文 fallback
+  const ultra = text.replace(/[^\x20-\x7E]/g, ' ');
+
+  // 超寬鬆 key 正規化（h...e...i...g...h...t / s...c...a...l...e）
+  const normalizeKeys = s => s
+    .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
+    .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
+
+  const normalized = normalizeKeys(ultra).replace(/\s+/g, ' ');
+
+  // 數字樣式：允許 123、123.45、.45（無前置 0）
+  const NUM = '(-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))';
+
+  const tryDirect = (k, s) =>
+    s.match(new RegExp('[\'"]' + k + '[\'"]\\s*[:=]?\\s*' + NUM, 'i')) ||
+    s.match(new RegExp('\\b' + k + '\\b\\s*[:=]?\\s*' + NUM, 'i'));
+
+  // 1) 直接/常見寫法
+  let hMatch = tryDirect('height', normalized);
+  let sMatch = tryDirect('scale',  normalized);
+
+  // 2) key 與數字分很遠（最多 1000 非數字）
+  if (!hMatch) hMatch = normalized.match(new RegExp('\\bheight\\b[^0-9-]{0,1000}' + NUM, 'i'));
+  if (!sMatch) sMatch = normalized.match(new RegExp('\\bscale\\b[^0-9-]{0,1000}'  + NUM, 'i'));
+
+  // 2a) 特判：亂碼提示 "@eigh) .93102789" → 當作 height
+  if (!hMatch) {
+    const hm = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+    if (hm) hMatch = [hm[0], hm[1]];
+  }
+
+  // ---- scale 雙候選補點（處理 "scale 078758337" / ".123"）----
+  const fixScaleCandidate = (sValRaw, sourceForDigits) => {
+    let raw = sValRaw;
+    if (raw.startsWith('.')) raw = '0' + raw;   // ".123" -> "0.123"
+    let sVal = parseFloat(raw);
+    if (isFinite(sVal) && sVal < 0.2) return String(sVal);
+
+    // 嘗試從文字裡抓 0ddddddd 型式（小數點被吞）
+    const m = sourceForDigits.match(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/i);
+    if (m) {
+      const digits = m[1];                                  // 078758337
+      const cand1 = parseFloat('0.'  + digits.slice(1));    // 0.78758337
+      const cand2 = parseFloat('0.0' + digits.slice(1));    // 0.078758337
+      if (cand2 < 0.2) return String(cand2);
+      if (cand1 < 0.2) return String(cand1);
+      return String(cand1); // 退而求其次
+    }
+    return String(sVal); // 沒抓到 digits 就用原值
+  };
+
+  if (sMatch) {
+    sMatch = [sMatch[0], fixScaleCandidate(sMatch[1], normalized)];
+  }
+
+  // h+s 都齊全 → 回傳
+  if (hMatch && sMatch) {
+    const hVal = parseFloat(hMatch[1].startsWith('.') ? '0' + hMatch[1] : hMatch[1]);
+    const sVal = parseFloat(sMatch[1].startsWith('.') ? '0' + sMatch[1] : sMatch[1]);
+    return { height: hVal, scale: sVal };
+  }
+
+  // 3) 掃 JSON 區塊（原流程）
+  const blocks = scanJsonBlocks(text);
+  for (const js of blocks) {
+    try {
+      const data = JSON.parse(js);
+      const r = findHeightScale(data);
+      if (r) return r;
+    } catch {}
+    try {
+      const cleaned = js.replace(/[^\x20-\x7E]/g, ' ');
+      const data2 = JSON.parse(cleaned);
+      const r2 = findHeightScale(data2);
+      if (r2) return r2;
+    } catch {}
+    try {
+      const repaired = normalizeKeys(js);
+      const data3 = JSON.parse(repaired);
+      const r3 = findHeightScale(data3);
+      if (r3) return r3;
+    } catch {}
+  }
+
+  // 4) 全文保底
+  let h = ultra.match(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'i')) ||
+          ultra.match(new RegExp('\\bheight\\b\\s*[:=]?\\s*' + NUM, 'i'));
+  let s = ultra.match(new RegExp('\\bscale\\b[^0-9-]{0,1500}'  + NUM, 'i')) ||
+          ultra.match(new RegExp('\\bscale\\b\\s*[:=]?\\s*'  + NUM, 'i'));
+
+  // 4a) 再做一次 "@eigh)" 特判
+  if (!h) {
+    const hm2 = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+    if (hm2) h = [hm2[0], hm2[1]];
+  }
+
+  // 4b) 全文也做 scale 雙候選補點
+  if (s) {
+    s = [s[0], fixScaleCandidate(s[1], ultra)];
+  }
+
+  // 4c) 若只抓到 scale → 在 scale 前 300 字找最近數字當 height（允許 ".123"）
+  if (!h && s) {
+    const sIdx = ultra.indexOf(s[0]);
+    const leftWin = ultra.slice(Math.max(0, sIdx - 300), sIdx);
+    const nums = [...leftWin.matchAll(/-?(?:\d+(?:\.\d+)?|\.\d+)/g)].map(m => m[0]);
+    if (nums.length) {
+      let cand = nums[nums.length - 1];
+      if (cand.startsWith('.')) cand = '0' + cand; // .931 → 0.931
+      const hVal = parseFloat(cand);
+      const sVal = parseFloat(s[1].startsWith('.') ? '0' + s[1] : s[1]);
+      if (hVal > 0.5 && hVal < 3.0) {
+        return { height: hVal, scale: sVal };
       }
-
-      try{
-        const again = decodeURIComponent(cur);
-        const txt2 = bytesToString(b64urlToBytes(again));
-        const r2 = pickHeightScale(txt2);
-        if (r2) return r2;
-      }catch(e){ log.push("decodeURIComponent 後再解碼失敗: "+e); }
-
-      return null;
     }
+  }
 
-    const calc = (H,S)=> 7.6 - 8.3*S - 3*H;
+  if (h && s) {
+    const hVal = parseFloat(h[1].startsWith('.') ? '0' + h[1] : h[1]);
+    const sVal = parseFloat(s[1].startsWith('.') ? '0' + s[1] : s[1]);
+    return { height: hVal, scale: sVal };
+  }
 
-    function renderResult(res, log){
-      if(!res){
-        return renderError("⚠️ 無效數值，無法計算身高", log.join("\n"));
-      }
-      const {height,scale} = res;
-      const now = calc(height,scale);
-      const top = calc(2,scale);
-      const low = calc(-2,scale);
-      return `
-        <table>
-          <tr><th>欄位</th><th>數值</th></tr>
-          <tr><td>height</td><td>${height}</td></tr>
-          <tr><td>scale</td><td>${scale}</td></tr>
-          <tr><td>身高</td><td>${now.toFixed(10)}</td></tr>
-          <tr><td>最高(h=2)</td><td>${top.toFixed(10)}</td></tr>
-          <tr><td>最低(h=-2)</td><td>${low.toFixed(10)}</td></tr>
-        </table>
-        <div class="error-box">${log.length?log.join("\n"):"無錯誤"}</div>
-      `;
-    }
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 600));
+}
 
-    function parseSingle(){
-      const log=[];
-      const input = document.getElementById('singleInput').value.trim();
-      const res = parseLine(input, log);
-      document.getElementById('singleResult').innerHTML = renderResult(res, log);
-    }
-    function clearSingle(){document.getElementById('singleInput').value='';document.getElementById('singleResult').innerHTML='';}
-
-    function parseBatch(){
-      const lines=document.getElementById('batchInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
-      let html='<table><tr><th>#</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>錯誤</th></tr>';
-      lines.forEach((line,i)=>{
-        const log=[]; const r=parseLine(line,log);
-        if(r){
-          const now=calc(r.height,r.scale), top=calc(2,r.scale), low=calc(-2,r.scale);
-          html+=`<tr>
-            <td>${i+1}</td><td>${r.height}</td><td>${r.scale}</td>
-            <td>${now.toFixed(6)}</td><td>${top.toFixed(6)}</td><td>${low.toFixed(6)}</td>
-            <td style="text-align:left;font-size:12px">${log.join("<br>")||"—"}</td>
-          </tr>`;
-        }else{
-          html+=`<tr><td>${i+1}</td><td colspan="6" class="warn">⚠️ 無效數值<br>${log.join("<br>")}</td></tr>`;
-        }
-      });
-      html+='</table>'; document.getElementById('batchResult').innerHTML=html;
-    }
-    function clearBatch(){document.getElementById('batchInput').value='';document.getElementById('batchResult').innerHTML='';}
-  </script>
+function runSingle(){
+  const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
+  try{const {height,scale}=parseHeightScaleFromUrl(url);const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
+    out.innerHTML=`<table>
+      <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
+      <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
+      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
+      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
+      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
+    </table>`;
+  }catch(e){out.textContent="錯誤："+e.message;}
+}
+function clearSingle(){document.getElementById('single').value='';document.getElementById('singleOut').innerHTML=''}
+function runBatch(){
+  const txt=document.getElementById('batch').value.trim();const out=document.getElementById('batchOut');out.innerHTML='';if(!txt) return;
+  const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const rows=lines.map(link=>{try{const r=parseHeightScaleFromUrl(link);return {link,height:r.height,scale:r.scale,val:calc(r.height,r.scale),hi:calc(2,r.scale),lo:calc(-2,r.scale)};}catch(e){return {link,err:e.message};}});
+  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>狀態</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{html+=`<tr>
+      <td>${i+1}</td>
+      <td class="mono" style="max-width:260px;overflow-wrap:anywhere;">${escapeHtml(r.link)}</td>
+      <td class="mono">${r.err?'—':fmt(r.height)}</td>
+      <td class="mono">${r.err?'—':fmt(r.scale)}</td>
+      <td class="mono">${r.err?'—':fmt(r.val)}</td>
+      <td class="mono">${r.err?'—':fmt(r.hi)}</td>
+      <td class="mono">${r.err?'—':fmt(r.lo)}</td>
+      <td>${r.err?('錯誤：'+escapeHtml(r.err)):'OK'}</td>
+    </tr>`;});
+  html+='</tbody></table>';out.innerHTML=html;
+}
+function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML=''}
+function openPreview(fig){
+  const src=fig.querySelector('img').src,alt=fig.querySelector('img').alt||'';const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
+  overlay.innerHTML=`<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
+  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
+  document.body.appendChild(overlay);
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+</script>
 </body>
 </html>
