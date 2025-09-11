@@ -1,324 +1,209 @@
-<!doctype html>
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>光遇身高查詢</title>
   <style>
-    :root{
-      --bg1:#cfe6ff; --bg2:#b7d7ff; --card:#ffffff;
-      --txt:#1f2a44; --muted:#6b7a90;
-      --brand:#2f74ff; --brand2:#5aa8ff;
-      --warn:#d9534f; --border: rgba(0,0,0,.08);
+    body {
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(to bottom, #cfe9ff, #ffffff);
+      margin: 0;
+      padding: 0;
     }
-    html,body{margin:0;padding:0;background:
-      radial-gradient(1800px 600px at 50% -200px, var(--bg2), var(--bg1) 40%, #dfeeff 80%);
-      color:var(--txt);font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", Arial, "PingFang TC", "Helvetica Neue", "Microsoft JhengHei", sans-serif;
+    h1 {
+      text-align: center;
+      padding: 20px;
+      color: #2c3e50;
     }
-    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
-    h1{font-size:28px;margin:8px 0 16px;text-shadow:0 2px 8px rgba(0,0,0,.08)}
-    h2{font-size:20px;margin:0 0 10px}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef5ff;color:#2a61d6;font-weight:700;font-size:12px;border:1px solid #d9e7ff}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 8px 24px rgba(31,42,68,.06)}
-    .hint{background:rgba(255,255,255,.7);border:1px dashed var(--border);color:var(--muted);border-radius:12px;padding:12px;margin-bottom:10px}
-    label{display:block;margin:6px 0 8px;font-weight:600}
-    input,textarea{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid var(--border);padding:14px 14px;font-size:16px;outline:0;background:#fff}
-    textarea{min-height:120px;resize:vertical}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
-    .btn{appearance:none;border:0;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer}
-    .btn-primary{background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff}
-    .btn-ghost{background:#fff;color:var(--txt);border:1px solid var(--border)}
-    table{width:100%;border-collapse:collapse;border-spacing:0;margin-top:8px}
-    th,td{padding:10px 12px;border-top:1px solid var(--border);text-align:center}
-    th{color:var(--muted);font-weight:700;background:#fafcff}
-    td:first-child{color:var(--muted);text-align:left}
-    .warn{color:var(--warn);font-weight:700;margin-top:8px}
-    .small{font-size:13px;color:var(--muted)}
-    .footer{color:var(--muted);text-align:center;margin:28px 0}
-    .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:8px}
-    .step{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px}
-    .step img{width:100%;height:160px;object-fit:cover;border-radius:8px}
-    .step p{margin:8px 0 0;font-size:14px;color:var(--muted)}
-    code{background:#f2f6ff;border:1px solid #e3ecff;border-radius:6px;padding:2px 6px}
+    .guide {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f9fcff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .guide img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .guide figcaption {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-top: 5px;
+    }
+    .section {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #f1f1f1;
+    }
+    footer {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>光遇身高查詢 <span class="pill">持續更新</span></h1>
 
-    <!-- 使用教學（舊版保留，可自行更換/增減圖片） -->
-    <div class="card">
-      <h2>使用教學</h2>
-      <div class="guide-grid">
-        <div class="step">
-          <img src="IMG_3171.jpeg" alt="步驟1">
-          <p>步驟1：遊戲內開啟帳號資訊 → 顯示 QR Code</p>
-        </div>
-        <div class="step">
-          <img src="img/step2.jpg" alt="步驟2" onerror="this.style.display='none'">
-          <p>步驟2：用手機掃描或截圖後辨識，複製網址</p>
-        </div>
-        <div class="step">
-          <img src="img/step3.jpg" alt="步驟3" onerror="this.style.display='none'">
-          <p>步驟3：把網址 / o=... / 純 token 貼到下方輸入框 → 解析</p>
-        </div>
-      </div>
-      <div class="small" style="margin-top:8px;">
-        支援貼上 <code>https://sky.thatg.co/o=...</code>（或 <code>o=...</code> / 純 token）。
-      </div>
-    </div>
+<h1>光遇身高查詢</h1>
 
-    <!-- 提示 -->
-    <div class="card hint">
-      公式：<code>身高 = 7.6 − 8.3×scale − 3×height</code>。另計算「最高(h=2)／最低(h=-2)」。<br>
-      若原始資料被破壞，只會顯示 <b>--</b> 與提醒，不會跳錯。
-    </div>
+<section class="guide">
+  <h2>使用教學</h2>
+  <figure>
+    <img src="IMG_3171.jpeg" alt="教學圖片">
+    <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+  </figure>
+  <p>步驟2：掃描 QRcode，複製網址</p>
+  <p>步驟3：貼到下方輸入框，點「解析」</p>
+</section>
 
-    <!-- 單一解析 -->
-    <div class="card">
-      <h2>單一連結</h2>
-      <label for="one">貼上網址 / o=... / token</label>
-      <input id="one" placeholder="例如：https://sky.thatg.co/o=XXXX 或 o=XXXX 或純 token" />
-      <div class="row">
-        <button class="btn btn-primary" onclick="onParse()">解析</button>
-        <button class="btn btn-ghost"   onclick="onClear()">清除</button>
-      </div>
-      <div id="oneOut" class="small" style="margin-top:12px;"></div>
-    </div>
+<section class="section">
+  <h2>單一連結</h2>
+  <input type="text" id="singleInput" placeholder="貼上網址 / o=... / token">
+  <button onclick="parseSingle()">解析</button>
+  <button onclick="clearSingle()">清除</button>
+  <div id="singleResult"></div>
+</section>
 
-    <!-- 批次解析（舊功能保留） -->
-    <div class="card">
-      <h2>批次解析</h2>
-      <label for="batch">每行一條網址 / o=... / token</label>
-      <textarea id="batch" placeholder="一行一條，貼上多筆一起解析"></textarea>
-      <div class="row">
-        <button class="btn btn-primary" onclick="onBatch()">批次解析</button>
-        <button class="btn btn-ghost"   onclick="onBatchClear()">清除</button>
-      </div>
-      <div id="batchOut" class="small" style="margin-top:12px;"></div>
-    </div>
+<section class="section">
+  <h2>批次解析</h2>
+  <textarea id="batchInput" rows="5" placeholder="每行貼一條網址 / o=... / token"></textarea>
+  <button onclick="parseBatch()">批次解析</button>
+  <button onclick="clearBatch()">清除</button>
+  <div id="batchResult"></div>
+</section>
 
-    <div class="footer">製作者：言陌 · 本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
-  </div>
+<footer>
+  製作者：言陌 🔥 ｜ 此網頁持續更新  
+  <br>本工具與 thatgamecompany 無關，僅供玩家交流與學習使用
+</footer>
 
-  <script>
-  /*****************
-   * 基礎工具
-   *****************/
-  function extractOToken(input){
-    if(!input) return '';
-    const s = String(input).trim();
+<script>
+function extractJson(str) {
+  try {
+    const match = str.match(/\{.*\}/s);
+    if (match) return JSON.parse(match[0]);
+  } catch (e) {}
+  return null;
+}
 
-    // 完整網址 https://.../o=XXXX
-    const q = s.match(/[?&]o=([^&#]+)/i);
-    if(q) return q[1];
+function calcHeight(h, s) {
+  return 7.6 - 8.3 * s - 3 * h;
+}
 
-    // 直接 o=XXXX
-    const m = s.match(/\bo=([A-Za-z0-9._\-]+)/i);
-    if(m) return m[1];
-
-    // 純 token
-    return s;
+function renderResult(res) {
+  if (!res || res.height === undefined || res.scale === undefined) {
+    return `<p style="color:red">⚠️ 無效數值，無法計算身高</p>`;
   }
-
-  function b64urlToText(token){
-    if(!token) return '';
-    let b64 = token.replace(/-/g,'+').replace(/_/g,'/');
-    const pad = b64.length % 4;
-    if(pad) b64 += '='.repeat(4-pad);
-    let bin = '';
-    try{ bin = atob(b64); }catch(e){ return ''; }
-    try{
-      const buf = new Uint8Array([...bin].map(c=>c.charCodeAt(0)));
-      return new TextDecoder('utf-8',{fatal:false}).decode(buf);
-    }catch(e){
-      return bin; // fallback latin1
-    }
+  const h = parseFloat(res.height);
+  const s = parseFloat(res.scale);
+  if (isNaN(h) || isNaN(s)) {
+    return `<p style="color:red">⚠️ 無效數值，無法計算身高</p>`;
   }
+  const heightNow = calcHeight(h, s);
+  const topVal = calcHeight(2, s);   // 固定 h=2
+  const lowVal = calcHeight(-2, s);  // 固定 h=-2
+  return `
+    <table>
+      <tr><th>欄位</th><th>數值</th></tr>
+      <tr><td>height</td><td>${h}</td></tr>
+      <tr><td>scale</td><td>${s}</td></tr>
+      <tr><td>身高</td><td>${heightNow.toFixed(6)}</td></tr>
+      <tr><td>最高 (h=2)</td><td>${topVal.toFixed(6)}</td></tr>
+      <tr><td>最低 (h=-2)</td><td>${lowVal.toFixed(6)}</td></tr>
+    </table>
+    <p style="color:#e67e22">⚠️ 注意：這組數據可能不是實際身高，僅供參考</p>
+  `;
+}
 
-  const fmt = v => (typeof v==='number' && isFinite(v)) ? Number(v).toFixed(6) : v;
-
-  /*************************************************
-   * 強韌的 height / scale 解析器（整合所有保底）
-   *************************************************/
-  function parseHeightScaleFromUrl(input){
-    const token = extractOToken(input);
-    const raw   = b64urlToText(token);
-    const ultra = raw.replace(/[^\x20-\x7E]/g, ' '); // 只留可見 ASCII
-
-    const normalizeKeys = s => s
-      .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
-      .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
-
-    const normalized = normalizeKeys(ultra).replace(/\s+/g, ' ');
-    const NUM = '(-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))';
-
-    const isHeightOk = v => isFinite(v) && v > 0.5 && v < 3.0;
-    const isScaleOk  = v => isFinite(v) && v >= 0.001 && v < 0.2;
-    const fixLeadingDot = s => s && s.startsWith('.') ? '0' + s : s;
-
-    // 收集 height 候選：標準/寬鬆 + JSON 寫法 + @eigh) 提示
-    const collectHeights = (src) => {
-      const arr = [];
-      for(const m of src.matchAll(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'gi'))){
-        arr.push(parseFloat(fixLeadingDot(m[1])));
-      }
-      for(const m of src.matchAll(new RegExp('[\'"]height[\'"]\\s*[:=]?\\s*' + NUM, 'gi'))){
-        arr.push(parseFloat(fixLeadingDot(m[1])));
-      }
-      for(const m of src.matchAll(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/gi)){
-        arr.push(parseFloat(fixLeadingDot(m[1])));
-      }
-      return arr;
-    };
-
-    // 收集 scale 候選：標準/寬鬆 + JSON 寫法 + 0ddddddd 雙候選補點
-    const collectScales = (src) => {
-      const arr = [];
-      for(const m of src.matchAll(new RegExp('\\bscale\\b[^0-9-]{0,1500}' + NUM, 'gi'))){
-        arr.push(parseFloat(fixLeadingDot(m[1])));
-      }
-      for(const m of src.matchAll(new RegExp('[\'"]scale[\'"]\\s*[:=]?\\s*' + NUM, 'gi'))){
-        arr.push(parseFloat(fixLeadingDot(m[1])));
-      }
-      for(const m of src.matchAll(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/gi)){
-        const d = m[1]; // 078758337
-        const cand1 = parseFloat('0.'  + d.slice(1)); // 0.7…
-        const cand2 = parseFloat('0.0' + d.slice(1)); // 0.07…
-        arr.push(cand1, cand2);
-      }
-      return arr;
-    };
-
-    // 先用 normalized 收集，沒拿到再用 ultra
-    let hCands = collectHeights(normalized);
-    let sCands = collectScales (normalized);
-    if(!hCands.length) hCands = collectHeights(ultra);
-    if(!sCands.length) sCands = collectScales (ultra);
-
-    const hGood = hCands.find(isHeightOk);
-    const sGood = sCands.find(isScaleOk);
-
-    if(hGood != null && sGood != null){
-      return { height: hGood, scale: sGood };
-    }
-
-    // 有任何候選，但都不合理：顯示為 -- 並警告
-    if(hCands.length || sCands.length){
-      const h = (hCands.find(isFinite) ?? NaN);
-      const s = (sCands.find(isFinite) ?? NaN);
-      return {
-        height: isHeightOk(h) ? h : '--',
-        scale : isScaleOk(s) ? s : '--',
-        warning:true
-      };
-    }
-
-    throw new Error('找不到 height/scale；片段: ' + ultra.slice(0,600));
+function parseSingle() {
+  const input = document.getElementById('singleInput').value.trim();
+  const json = extractJson(decodeURIComponent(input));
+  let result = {};
+  if (json && json.height !== undefined && json.scale !== undefined) {
+    result = { height: json.height, scale: json.scale };
+  } else {
+    result = { height: '--', scale: '--' };
   }
+  document.getElementById('singleResult').innerHTML = renderResult(result);
+}
 
-  /*****************
-   * 顯示（單一）
-   *****************/
-  function renderResult(res){
-    const canCalc = (res.height !== '--' && res.scale !== '--' && isFinite(res.height) && isFinite(res.scale));
-    let html = `
-      <table>
-        <tr><th>欄位</th><th>數值</th></tr>
-        <tr><td>height</td><td>${fmt(res.height)}</td></tr>
-        <tr><td>scale</td><td>${fmt(res.scale)}</td></tr>
-    `;
-    if(canCalc){
-      const h = Number(res.height), s = Number(res.scale);
-      const calc = (H,S)=> 7.6 - 8.3*S - 3*H;
-      html += `
-        <tr><td>身高</td><td>${fmt(calc(h,s))}</td></tr>
-        <tr><td>最高 (h=2)</td><td>${fmt(calc(h+2,s))}</td></tr>
-        <tr><td>最低 (h=-2)</td><td>${fmt(calc(h-2,s))}</td></tr>
-      `;
-    }else{
-      html += `<tr><td colspan="2" class="warn">⚠️ 無效數值，無法計算身高</td></tr>`;
-    }
-    html += `</table>`;
-    if(res.warning){
-      html += `<div class="warn">⚠️ 注意：這組數據可能不是實際身高，僅供參考</div>`;
-    }
-    return html;
-  }
+function clearSingle() {
+  document.getElementById('singleInput').value = '';
+  document.getElementById('singleResult').innerHTML = '';
+}
 
-  /*****************
-   * 顯示（批次）
-   *****************/
-  function renderBatchRows(rows){
-    let html = `
-      <table>
-        <tr>
-          <th>#</th><th>輸入</th><th>height</th><th>scale</th>
-          <th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>狀態</th>
-        </tr>
-    `;
-    for(let i=0;i<rows.length;i++){
-      const r = rows[i];
-      const ok = (r.height!=='--' && r.scale!=='--' && isFinite(r.height) && isFinite(r.scale));
-      const calc = (H,S)=> 7.6 - 8.3*S - 3*H;
+function parseBatch() {
+  const lines = document.getElementById('batchInput').value.trim().split("\n");
+  let html = '<table><tr><th>#</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th></tr>';
+  lines.forEach((line, i) => {
+    const json = extractJson(decodeURIComponent(line));
+    if (json && json.height !== undefined && json.scale !== undefined) {
+      const h = parseFloat(json.height);
+      const s = parseFloat(json.scale);
+      const val = calcHeight(h, s);
+      const topVal = calcHeight(2, s);
+      const lowVal = calcHeight(-2, s);
       html += `<tr>
         <td>${i+1}</td>
-        <td style="text-align:left;max-width:260px;overflow-wrap:anywhere;">${escapeHtml(r.input)}</td>
-        <td>${fmt(r.height)}</td>
-        <td>${fmt(r.scale)}</td>
-        <td>${ok ? fmt(calc(r.height,r.scale)) : '--'}</td>
-        <td>${ok ? fmt(calc(r.height+2,r.scale)) : '--'}</td>
-        <td>${ok ? fmt(calc(r.height-2,r.scale)) : '--'}</td>
-        <td>${r.err ? `<span class="warn">錯誤</span>` : (r.warning ? '⚠️ 可能不準' : 'OK')}</td>
+        <td>${h}</td>
+        <td>${s}</td>
+        <td>${val.toFixed(6)}</td>
+        <td>${topVal.toFixed(6)}</td>
+        <td>${lowVal.toFixed(6)}</td>
       </tr>`;
+    } else {
+      html += `<tr><td>${i+1}</td><td colspan="5" style="color:red">⚠️ 無效數值</td></tr>`;
     }
-    html += `</table>`;
-    return html;
-  }
+  });
+  html += '</table>';
+  document.getElementById('batchResult').innerHTML = html;
+}
 
-  /*****************
-   * 事件
-   *****************/
-  function onParse(){
-    const input = document.getElementById('one').value.trim();
-    const out = document.getElementById('oneOut');
-    out.innerHTML = '<span class="small">解析中…</span>';
-    try{
-      const res = parseHeightScaleFromUrl(input);
-      out.innerHTML = renderResult(res);
-    }catch(err){
-      out.innerHTML = `<div class="warn">錯誤：${escapeHtml(String(err.message || err))}</div>`;
-    }
-  }
-  function onClear(){
-    document.getElementById('one').value = '';
-    document.getElementById('oneOut').innerHTML = '';
-  }
+function clearBatch() {
+  document.getElementById('batchInput').value = '';
+  document.getElementById('batchResult').innerHTML = '';
+}
+</script>
 
-  function onBatch(){
-    const txt = document.getElementById('batch').value.trim();
-    const out = document.getElementById('batchOut');
-    if(!txt){ out.innerHTML = ''; return; }
-    out.innerHTML = '<span class="small">解析中…</span>';
-    const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-    const rows = lines.map(s=>{
-      try{
-        const r = parseHeightScaleFromUrl(s);
-        return { input:s, ...r };
-      }catch(e){
-        return { input:s, err:true, height:'--', scale:'--' };
-      }
-    });
-    out.innerHTML = renderBatchRows(rows);
-  }
-  function onBatchClear(){
-    document.getElementById('batch').value = '';
-    document.getElementById('batchOut').innerHTML = '';
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  </script>
 </body>
 </html>
