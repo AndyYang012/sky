@@ -92,7 +92,7 @@
     </div>
     <div id="singleOut"></div>
 
-    <!-- 除錯資訊：會顯示 height / scale 的附近片段 -->
+    <!-- 除錯資訊：顯示就近片段 -->
     <details class="debug">
       <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
       <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
@@ -139,8 +139,6 @@ function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
 function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); } // 清除不可見字元
-
-// 取某個關鍵字的「就近片段」
 function around(text, re, radius=180){
   try{
     const m = text.match(re);
@@ -204,16 +202,16 @@ function findHeightScale(obj){
 }
 
 /* ========= 寬容度更高的抓取 ========= */
-// 優先只抓「有小數點」且貼近 height 的值，避免抓到 3617717 這種整數
+// 先抓 heigh[t/)] + 小數；再 fallback 到只剩 "eight":<數字>
 function grabHeightFromText(s){
   s = vis(s);
-  const m1 = s.match(/heigh[t\)]?[^0-9-]{0,50}(-?(?:\d*\.\d{1,9}))/i);
+  const m1 = s.match(/heigh[t\)]?[^0-9-]{0,50}(-?(?:\d*\.\d{1,9}|\d+(?:\.\d+)?))/i);
   if(m1){
     let raw = m1[1];
     if (raw.startsWith('.')) raw = '0'+raw;
     return parseFloat(raw);
   }
-  const m2 = s.match(/heigh[t\)]?[^0-9-]{0,1000}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+  const m2 = s.match(/eight"\s*:\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
   if(m2){
     let raw = m2[1];
     if (raw.startsWith('.')) raw = '0'+raw;
@@ -242,9 +240,9 @@ function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const decoded = b64urlToText(token);
 
-  // 調整除錯顯示：抓 height/scale 的就近片段
+  // 除錯區：就近片段
   const clean = vis(decoded);
-  const ctxH = around(clean, /heigh[t\)]?[^0-9-]{0,80}-?(?:\d*\.\d{1,9}|\d+(?:\.\d+)?)/i, 200);
+  const ctxH = around(clean, /(?:heigh[t\)]?|eight")\s*[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+))/i, 200);
   const ctxS = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+)|0\d{6,10})/i, 200);
   const rawEl = document.getElementById('rawSnippet');
   const hEl = document.getElementById('ctxHeight');
@@ -253,19 +251,18 @@ function parseHeightScaleFromUrl(input){
   if(sEl) sEl.textContent = ctxS || '(未抓到 scale 片段)';
   if(rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
 
-  // 先嘗試文字抓取
+  // 解析
   let h = grabHeightFromText(decoded);
   let s = grabScaleFromText(decoded);
   if (h!=null && s!=null) return {height:h, scale:s};
 
-  // 再試 JSON 區塊
+  // JSON 區塊嘗試
   const blocks = scanJsonBlocks(decoded);
   for (const js of blocks) {
     try { const data = JSON.parse(js); const r = findHeightScale(data); if(r) return r; } catch{}
     try { const repaired = js.replace(/[^\x20-\x7E]/g,' '); const d2 = JSON.parse(repaired); const r2 = findHeightScale(d2); if(r2) return r2; } catch{}
   }
 
-  // 失敗：帶片段訊息
   throw new Error('找不到 JSON 或 height/scale，片段: ' + clean.slice(0, 600));
 }
 
