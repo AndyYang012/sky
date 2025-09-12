@@ -69,7 +69,7 @@
   <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
   <div class="sub">Base64Url 解碼 + height/scale 解析</div>
 
-  <!-- 圖片教學（可點圖預覽） -->
+  <!-- 教學：第 1 步有圖片；第 2、3 步為單行文字 -->
   <section class="guide">
     <h2>使用教學</h2>
     <div class="guide-grid">
@@ -77,14 +77,8 @@
         <img src="IMG_3171.jpeg" alt="步驟1">
         <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
       </figure>
-      <figure class="step" onclick="openPreview(this)">
-        <img src="IMG_3172.jpeg" alt="步驟2">
-        <figcaption>步驟2：掃描 QRcode，複製網址</figcaption>
-      </figure>
-      <figure class="step" onclick="openPreview(this)">
-        <img src="IMG_3173.jpeg" alt="步驟3">
-        <figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption>
-      </figure>
+      <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
+      <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
     </div>
   </section>
 
@@ -98,10 +92,24 @@
     </div>
     <div id="singleOut"></div>
 
-    <!-- 除錯資訊：顯示解碼片段 -->
+    <!-- 除錯資訊：會顯示 height / scale 的附近片段 -->
     <details class="debug">
-      <summary>🔧 除錯區（顯示解碼片段，已安全轉義）</summary>
-      <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;"></pre>
+      <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
+      <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
+      <div style="display:grid;gap:8px">
+        <div>
+          <b>height 片段：</b>
+          <pre id="ctxHeight" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+        </div>
+        <div>
+          <b>scale 片段：</b>
+          <pre id="ctxScale" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+        </div>
+        <div>
+          <b>通用片段（fallback）：</b>
+          <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
+        </div>
+      </div>
     </details>
   </div>
 
@@ -131,6 +139,18 @@ function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
 function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); } // 清除不可見字元
+
+// 取某個關鍵字的「就近片段」
+function around(text, re, radius=180){
+  try{
+    const m = text.match(re);
+    if(!m) return '';
+    const i = m.index ?? text.indexOf(m[0]);
+    const start = Math.max(0, i - radius);
+    const end   = Math.min(text.length, i + m[0].length + radius);
+    return escapeHtml(text.slice(start, end));
+  }catch{ return ''; }
+}
 
 /* ========= 取 token / 解碼 ========= */
 function extractOToken(input){
@@ -222,9 +242,16 @@ function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const decoded = b64urlToText(token);
 
-  // 顯示除錯片段
+  // 調整除錯顯示：抓 height/scale 的就近片段
+  const clean = vis(decoded);
+  const ctxH = around(clean, /heigh[t\)]?[^0-9-]{0,80}-?(?:\d*\.\d{1,9}|\d+(?:\.\d+)?)/i, 200);
+  const ctxS = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+)|0\d{6,10})/i, 200);
   const rawEl = document.getElementById('rawSnippet');
-  if(rawEl){ rawEl.textContent = escapeHtml(decoded.slice(0, 1200)); }
+  const hEl = document.getElementById('ctxHeight');
+  const sEl = document.getElementById('ctxScale');
+  if(hEl) hEl.textContent = ctxH || '(未抓到 height 片段)';
+  if(sEl) sEl.textContent = ctxS || '(未抓到 scale 片段)';
+  if(rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
 
   // 先嘗試文字抓取
   let h = grabHeightFromText(decoded);
@@ -235,13 +262,11 @@ function parseHeightScaleFromUrl(input){
   const blocks = scanJsonBlocks(decoded);
   for (const js of blocks) {
     try { const data = JSON.parse(js); const r = findHeightScale(data); if(r) return r; } catch{}
-    try { const cleaned = js.replace(/[^\x20-\x7E]/g,' '); const data2 = JSON.parse(cleaned); const r2 = findHeightScale(data2); if(r2) return r2; } catch{}
+    try { const repaired = js.replace(/[^\x20-\x7E]/g,' '); const d2 = JSON.parse(repaired); const r2 = findHeightScale(d2); if(r2) return r2; } catch{}
   }
 
   // 失敗：帶片段訊息
-  const ultra = vis(decoded);
-  const snippet = ultra.slice(0, 600);
-  throw new Error('找不到 JSON 或 height/scale，片段: ' + snippet);
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + clean.slice(0, 600));
 }
 
 /* ========= 單一 / 批次 ========= */
@@ -269,6 +294,8 @@ function clearSingle(){
   document.getElementById('single').value='';
   document.getElementById('singleOut').innerHTML='';
   const rawEl = document.getElementById('rawSnippet'); if(rawEl) rawEl.textContent='';
+  const hEl = document.getElementById('ctxHeight'); if(hEl) hEl.textContent='';
+  const sEl = document.getElementById('ctxScale'); if(sEl) sEl.textContent='';
 }
 
 function runBatch(){
