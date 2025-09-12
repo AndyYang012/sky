@@ -10,67 +10,84 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
+    :root {
+      --brand-1:#6fa8dc; --brand-2:#3d85c6;
+      --bg-1:#a1c4fd; --bg-2:#c2e9fb;
+      --glass: rgba(255,255,255,0.85);
+      --text:#333; --muted:#666;
+      --ok:#2e7d32; --err:#c62828;
+    }
+    * { box-sizing: border-box }
     body {
       margin: 0;
-      font-family: "Noto Sans TC","PingFang TC",sans-serif;
-      background: linear-gradient(160deg,#a1c4fd 0%,#c2e9fb 100%);
-      color: #333;
+      font-family: "Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+      background: linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
+      color: var(--text);
       line-height: 1.6;
     }
     h1 {
       text-align: center;
-      padding: 20px;
+      padding: 20px 12px 8px;
       font-size: 26px;
       color: #fff;
       text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      margin: 0;
     }
     h1 img {
       height: 28px;
       vertical-align: middle;
       margin-right: 8px;
     }
+    .sub {
+      text-align:center; color:#eef; font-size:13px; margin-bottom:10px;
+    }
     .card {
-      background: rgba(255,255,255,0.85);
+      background: var(--glass);
       border-radius: 16px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 700px;
+      padding: 16px;
+      margin: 14px auto;
+      max-width: 900px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
-    label {font-weight: bold;color: #444;}
+    label {font-weight: 700;color: #444;}
     input,textarea {
       width: 100%;padding: 12px;margin-top: 10px;
       border-radius: 10px;border: 1px solid #ccc;font-size: 15px;
-      outline: none;transition: 0.2s;
+      outline: none;transition: 0.2s;background:#fff;
     }
     input:focus,textarea:focus {
-      border-color: #6fa8dc;box-shadow: 0 0 8px rgba(111,168,220,0.4);
+      border-color: var(--brand-1);box-shadow: 0 0 8px rgba(111,168,220,0.35);
     }
     button {
-      padding: 10px;border: none;border-radius: 8px;
+      padding: 10px 12px;border: none;border-radius: 8px;
       font-size: 15px;cursor: pointer;transition: 0.2s;
     }
-    button.primary {background: linear-gradient(135deg,#6fa8dc,#3d85c6);color: white;}
-    button.primary:hover {background: linear-gradient(135deg,#5b96cc,#366fae);}
+    button.primary {background: linear-gradient(135deg,var(--brand-1),var(--brand-2));color: white;}
+    button.primary:hover {filter:brightness(0.95)}
     button.secondary {background: #fff;border: 1px solid #bbb;color: #333;}
     button.secondary:hover {background: #f0f0f0;}
-    .row {display: grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .row {display: grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:10px;margin-top:12px;}
+    .tools {display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     table {
       width:100%;border-collapse:collapse;margin-top:15px;
       background: rgba(255,255,255,0.9);border-radius: 10px;overflow:hidden;
     }
-    th,td {padding:10px;text-align:center;border-bottom:1px solid #eee;}
+    th,td {padding:10px;text-align:center;border-bottom:1px solid #eee;vertical-align: middle;}
     th {background:#f8fbff;font-weight:bold;color:#333;}
-    .guide {max-width:900px;margin:20px auto;text-align:center;}
-    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);}
+    .mono {font-family: ui-monospace, Menlo, Consolas, "SF Mono", monospace;}
+    .badge {display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#e8f5e9;color:var(--ok);border:1px solid #c8e6c9}
+    .err{background:#ffebee;color:var(--err);border:1px solid #ffcdd2}
+    .guide {max-width:980px;margin:14px auto;text-align:center;}
+    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
     .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
     .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
     .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
     .step figcaption {font-size:14px;margin-top:8px;color:#444;}
     footer {
       background: rgba(30, 60, 120, 0.9);
-      padding: 20px;
-      margin-top: 40px;
+      padding: 16px;
+      margin-top: 20px;
     }
     .footer-inner {
       text-align: center;
@@ -115,12 +132,13 @@
     <img src="logo.jpeg" alt="logo">
     光遇身高查詢
   </h1>
+  <div class="sub">Base64Url 解碼 + height/scale 智慧解析</div>
 
   <!-- 教學 -->
   <section class="guide">
     <h2>使用教學</h2>
     <div class="guide-grid">
-      <figure class="step" onclick="openPreview(this)">
+      <figure class="step">
         <img src="IMG_3171.jpeg" alt="步驟1">
         <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
       </figure>
@@ -132,7 +150,7 @@
   <!-- 單一 -->
   <div class="card">
     <label for="single">單一連結</label>
-    <input id="single" placeholder="貼上網址 / o=... / token">
+    <input id="single" placeholder="貼上網址 / o=... / token" class="mono">
     <div class="row">
       <button class="primary" onclick="runSingle()">解析</button>
       <button class="secondary" onclick="clearSingle()">清除</button>
@@ -143,8 +161,8 @@
   <!-- 批次 -->
   <div class="card">
     <label for="batch">多條連結（每行一條）</label>
-    <textarea id="batch" rows="5" placeholder="每行貼一條網址 / o=... / token"></textarea>
-    <div class="row">
+    <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" class="mono"></textarea>
+    <div class="tools">
       <button class="primary" onclick="runBatch()">批次解析</button>
       <button class="secondary" onclick="clearBatch()">清除</button>
     </div>
@@ -162,239 +180,66 @@
   </footer>
 
 <script>
-/* --- 計數器 --- */
-(function () {
-  const el = document.getElementById('counter');
-  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
-
-  fetch(COUNTER_URL, { cache: 'no-cache' })
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(d => {
-      el.textContent = '累積使用次數：' + d.value;
-    })
-    .catch(err => {
-      try {
-        const k = 'local-visit-count';
-        const v = (parseInt(localStorage.getItem(k) || '0', 10) + 1);
-        localStorage.setItem(k, v);
-        el.textContent = '累積使用次數（本機）：' + v;
-      } catch (e) {
-        el.textContent = '累積使用次數：暫時無法取得';
-      }
-      console.log('counter error:', err);
-    });
-})();
-
-/* --- 解析程式碼 (原本功能保持不變) --- */
 function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
 function extractOToken(input){
-  let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
-  const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
-  try{const u=new URL(s);const q=u.searchParams.get("o");if(q) return q;
-    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i);if(mPath) return mPath[1];}catch{}
-  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i);if(m) return m[1];
+  let s=(input||"").trim().replace(/\s+/g,"");
+  const head=s.match(/^o(?:=|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
+  try{const u=new URL(s);const q=u.searchParams.get("o");if(q) return q;}catch{}
+  const m=s.match(/o(?:=|%3D)([-_A-Za-z0-9]+)/i);if(m) return m[1];
   if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
   throw new Error("找不到 o 參數");
 }
 function b64urlToText(token){
-  try{token=decodeURIComponent(token);}catch(e){}
   let b64=token.replace(/-/g,'+').replace(/_/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
-  try{return atob(b64);}catch(e){}
-  try{const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i)&0xFF;return new TextDecoder('utf-8',{fatal:false}).decode(bytes);}catch(e){}
-  try{const bin=atob(b64);let cleaned='';for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}return cleaned;}catch(e){throw new Error('base64 解碼失敗');}
+  return atob(b64);
 }
-function scanJsonBlocks(text){
-  const collect=(s)=>{const blocks=[];let start=-1,depth=0,inStr=false,esc=false;
-    for(let i=0;i<s.length;i++){const ch=s[i];
-      if(start===-1){if(ch==='{'){start=i;depth=1;inStr=false;esc=false;}continue;}
-      if(esc){esc=false;continue;}
-      if(ch==='\\'){esc=true;continue;}
-      if(ch==='"'){inStr=!inStr;continue;}
-      if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
-    }return blocks;};
-  let blocks=collect(text);if(blocks.length) return blocks;
-  let cleaned='';for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';}return collect(cleaned);
-}
-function findHeightScale(obj){
-  if(obj&&typeof obj==="object"){if("height" in obj&&"scale" in obj) return {height:obj.height,scale:obj.scale};
-    for(const k in obj){const r=findHeightScale(obj[k]);if(r) return r;}}
-  return null;
-}
-// 直接取代整個 parseHeightScaleFromUrl
-function parseHeightScaleFromUrl(input){
-  const token = extractOToken(input);
-  const text  = b64urlToText(token);
-
-  // 先保留可見 ASCII，避免控制碼干擾；原始字串也留著做全文 fallback
-  const ultra = text.replace(/[^\x20-\x7E]/g, ' ');
-
-  // 超寬鬆 key 正規化（h...e...i...g...h...t / s...c...a...l...e）
-  const normalizeKeys = s => s
-    .replace(/h[\s\S]{0,200}?e[\s\S]{0,200}?i[\s\S]{0,200}?g[\s\S]{0,200}?h[\s\S]{0,200}?t/gi, 'height')
-    .replace(/s[\s\S]{0,200}?c[\s\S]{0,200}?a[\s\S]{0,200}?l[\s\S]{0,200}?e/gi, 'scale');
-
-  const normalized = normalizeKeys(ultra).replace(/\s+/g, ' ');
-
-  // 數字樣式：允許 123、123.45、.45（無前置 0）
-  const NUM = '(-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))';
-
-  const tryDirect = (k, s) =>
-    s.match(new RegExp('[\'"]' + k + '[\'"]\\s*[:=]?\\s*' + NUM, 'i')) ||
-    s.match(new RegExp('\\b' + k + '\\b\\s*[:=]?\\s*' + NUM, 'i'));
-
-  // 1) 直接/常見寫法
-  let hMatch = tryDirect('height', normalized);
-  let sMatch = tryDirect('scale',  normalized);
-
-  // 2) key 與數字分很遠（最多 1000 非數字）
-  if (!hMatch) hMatch = normalized.match(new RegExp('\\bheight\\b[^0-9-]{0,1000}' + NUM, 'i'));
-  if (!sMatch) sMatch = normalized.match(new RegExp('\\bscale\\b[^0-9-]{0,1000}'  + NUM, 'i'));
-
-  // 2a) 特判：亂碼提示 "@eigh) .93102789" → 當作 height
-  if (!hMatch) {
-    const hm = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
-    if (hm) hMatch = [hm[0], hm[1]];
-  }
-
-  // ---- scale 雙候選補點（處理 "scale 078758337" / ".123"）----
-  const fixScaleCandidate = (sValRaw, sourceForDigits) => {
-    let raw = sValRaw;
-    if (raw.startsWith('.')) raw = '0' + raw;   // ".123" -> "0.123"
-    let sVal = parseFloat(raw);
-    if (isFinite(sVal) && sVal < 0.2) return String(sVal);
-
-    // 嘗試從文字裡抓 0ddddddd 型式（小數點被吞）
-    const m = sourceForDigits.match(/\bscale\b[^0-9-]{0,1500}(0\d{6,10})/i);
-    if (m) {
-      const digits = m[1];                                  // 078758337
-      const cand1 = parseFloat('0.'  + digits.slice(1));    // 0.78758337
-      const cand2 = parseFloat('0.0' + digits.slice(1));    // 0.078758337
-      if (cand2 < 0.2) return String(cand2);
-      if (cand1 < 0.2) return String(cand1);
-      return String(cand1); // 退而求其次
-    }
-    return String(sVal); // 沒抓到 digits 就用原值
-  };
-
-  if (sMatch) {
-    sMatch = [sMatch[0], fixScaleCandidate(sMatch[1], normalized)];
-  }
-
-  // h+s 都齊全 → 回傳
-  if (hMatch && sMatch) {
-    const hVal = parseFloat(hMatch[1].startsWith('.') ? '0' + hMatch[1] : hMatch[1]);
-    const sVal = parseFloat(sMatch[1].startsWith('.') ? '0' + sMatch[1] : sMatch[1]);
-    return { height: hVal, scale: sVal };
-  }
-
-  // 3) 掃 JSON 區塊（原流程）
-  const blocks = scanJsonBlocks(text);
-  for (const js of blocks) {
-    try {
-      const data = JSON.parse(js);
-      const r = findHeightScale(data);
-      if (r) return r;
-    } catch {}
-    try {
-      const cleaned = js.replace(/[^\x20-\x7E]/g, ' ');
-      const data2 = JSON.parse(cleaned);
-      const r2 = findHeightScale(data2);
-      if (r2) return r2;
-    } catch {}
-    try {
-      const repaired = normalizeKeys(js);
-      const data3 = JSON.parse(repaired);
-      const r3 = findHeightScale(data3);
-      if (r3) return r3;
-    } catch {}
-  }
-
-  // 4) 全文保底
-  let h = ultra.match(new RegExp('\\bheight\\b[^0-9-]{0,1500}' + NUM, 'i')) ||
-          ultra.match(new RegExp('\\bheight\\b\\s*[:=]?\\s*' + NUM, 'i'));
-  let s = ultra.match(new RegExp('\\bscale\\b[^0-9-]{0,1500}'  + NUM, 'i')) ||
-          ultra.match(new RegExp('\\bscale\\b\\s*[:=]?\\s*'  + NUM, 'i'));
-
-  // 4a) 再做一次 "@eigh)" 特判
-  if (!h) {
-    const hm2 = ultra.match(/@eigh\)\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
-    if (hm2) h = [hm2[0], hm2[1]];
-  }
-
-  // 4b) 全文也做 scale 雙候選補點
-  if (s) {
-    s = [s[0], fixScaleCandidate(s[1], ultra)];
-  }
-
-  // 4c) 若只抓到 scale → 在 scale 前 300 字找最近數字當 height（允許 ".123"）
-  if (!h && s) {
-    const sIdx = ultra.indexOf(s[0]);
-    const leftWin = ultra.slice(Math.max(0, sIdx - 300), sIdx);
-    const nums = [...leftWin.matchAll(/-?(?:\d+(?:\.\d+)?|\.\d+)/g)].map(m => m[0]);
-    if (nums.length) {
-      let cand = nums[nums.length - 1];
-      if (cand.startsWith('.')) cand = '0' + cand; // .931 → 0.931
-      const hVal = parseFloat(cand);
-      const sVal = parseFloat(s[1].startsWith('.') ? '0' + s[1] : s[1]);
-      if (hVal > 0.5 && hVal < 3.0) {
-        return { height: hVal, scale: sVal };
-      }
-    }
-  }
-
-  if (h && s) {
-    const hVal = parseFloat(h[1].startsWith('.') ? '0' + h[1] : h[1]);
-    const sVal = parseFloat(s[1].startsWith('.') ? '0' + s[1] : s[1]);
-    return { height: hVal, scale: sVal };
-  }
-
-  throw new Error('找不到 JSON 或 height/scale，片段: ' + ultra.slice(0, 600));
-}
-
 function runSingle(){
-  const url=document.getElementById('single').value.trim();const out=document.getElementById('singleOut');out.innerHTML='';if(!url) return;
-  try{const {height,scale}=parseHeightScaleFromUrl(url);const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
+  const url=document.getElementById('single').value.trim();
+  const out=document.getElementById('singleOut');out.innerHTML='';
+  try{
+    const token=extractOToken(url);
+    const text=b64urlToText(token);
+    const h=text.match(/height.?(\d\.\d+)/i);
+    const s=text.match(/scale.?(\d\.\d+)/i);
+    if(!h||!s) throw new Error("解析失敗");
+    const height=parseFloat(h[1]),scale=parseFloat(s[1]);
+    const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
     out.innerHTML=`<table>
-      <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
-      <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
-      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
-      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
-      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
+      <tr><th>height</th><td>${fmt(height)}</td></tr>
+      <tr><th>scale</th><td>${fmt(scale)}</td></tr>
+      <tr><th>身高</th><td>${fmt(val)}</td></tr>
+      <tr><th>最高(h=2)</th><td>${fmt(hi)}</td></tr>
+      <tr><th>最低(h=-2)</th><td>${fmt(lo)}</td></tr>
     </table>`;
   }catch(e){out.textContent="錯誤："+e.message;}
 }
 function clearSingle(){document.getElementById('single').value='';document.getElementById('singleOut').innerHTML=''}
 function runBatch(){
-  const txt=document.getElementById('batch').value.trim();const out=document.getElementById('batchOut');out.innerHTML='';if(!txt) return;
-  const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  const rows=lines.map(link=>{try{const r=parseHeightScaleFromUrl(link);return {link,height:r.height,scale:r.scale,val:calc(r.height,r.scale),hi:calc(2,r.scale),lo:calc(-2,r.scale)};}catch(e){return {link,err:e.message};}});
-  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>最高(h=2)</th><th>最低(h=-2)</th><th>狀態</th></tr></thead><tbody>';
-  rows.forEach((r,i)=>{html+=`<tr>
-      <td>${i+1}</td>
-      <td class="mono" style="max-width:260px;overflow-wrap:anywhere;">${escapeHtml(r.link)}</td>
-      <td class="mono">${r.err?'—':fmt(r.height)}</td>
-      <td class="mono">${r.err?'—':fmt(r.scale)}</td>
-      <td class="mono">${r.err?'—':fmt(r.val)}</td>
-      <td class="mono">${r.err?'—':fmt(r.hi)}</td>
-      <td class="mono">${r.err?'—':fmt(r.lo)}</td>
-      <td>${r.err?('錯誤：'+escapeHtml(r.err)):'OK'}</td>
-    </tr>`;});
-  html+='</tbody></table>';out.innerHTML=html;
+  const txt=document.getElementById('batch').value.trim();
+  const out=document.getElementById('batchOut');out.innerHTML='';
+  if(!txt) return;
+  const lines=txt.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  let html='<table><tr><th>#</th><th>連結</th><th>身高</th><th>狀態</th></tr>';
+  lines.forEach((link,i)=>{
+    try{
+      const token=extractOToken(link);
+      const text=b64urlToText(token);
+      const h=text.match(/height.?(\d\.\d+)/i);
+      const s=text.match(/scale.?(\d\.\d+)/i);
+      if(!h||!s) throw new Error("解析失敗");
+      const height=parseFloat(h[1]),scale=parseFloat(s[1]);
+      const val=calc(height,scale);
+      html+=`<tr><td>${i+1}</td><td>${escapeHtml(link)}</td><td>${fmt(val)}</td><td><span class="badge ok">OK</span></td></tr>`;
+    }catch(e){
+      html+=`<tr><td>${i+1}</td><td>${escapeHtml(link)}</td><td>—</td><td><span class="badge err">錯誤</span></td></tr>`;
+    }
+  });
+  html+='</table>';
+  out.innerHTML=html;
 }
 function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML=''}
-function openPreview(fig){
-  const src=fig.querySelector('img').src,alt=fig.querySelector('img').alt||'';const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
-  overlay.innerHTML=`<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
-  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
-  document.body.appendChild(overlay);
-}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 </script>
 </body>
