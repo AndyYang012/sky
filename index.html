@@ -17,145 +17,75 @@
       --text:#333; --muted:#666;
       --ok:#2e7d32; --err:#c62828;
     }
-    * { box-sizing: border-box }
-    body {
-      margin: 0;
-      font-family: "Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
-      background: linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
-      color: var(--text);
-      line-height: 1.6;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+      background:linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
+      color:var(--text);line-height:1.6;
     }
-    h1 {
-      text-align: center;
-      padding: 20px 12px 8px;
-      font-size: 26px;
-      color: #fff;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
-      margin: 0;
+    h1{
+      text-align:center;padding:20px 12px 8px;font-size:26px;color:#fff;
+      text-shadow:0 2px 6px rgba(0,0,0,.25);margin:0;
     }
-    h1 img {
-      height: 28px;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    .sub {
-      text-align:center; color:#eef; font-size:13px; margin-bottom:10px;
-    }
-    .card {
-      background: var(--glass);
-      border-radius: 16px;
-      padding: 16px;
-      margin: 14px auto;
-      max-width: 900px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    }
-    label {font-weight: 700;color: #444;}
-    input,textarea {
-      width: 100%;padding: 12px;margin-top: 10px;
-      border-radius: 10px;border: 1px solid #ccc;font-size: 15px;
-      outline: none;transition: 0.2s;background:#fff;
-    }
-    input:focus,textarea:focus {
-      border-color: var(--brand-1);box-shadow: 0 0 8px rgba(111,168,220,0.35);
-    }
-    button {
-      padding: 10px 12px;border: none;border-radius: 8px;
-      font-size: 15px;cursor: pointer;transition: 0.2s;
-    }
-    button.primary {background: linear-gradient(135deg,var(--brand-1),var(--brand-2));color: white;}
-    button.primary:hover {filter:brightness(0.95)}
-    button.secondary {background: #fff;border: 1px solid #bbb;color: #333;}
-    button.secondary:hover {background: #f0f0f0;}
-    .row {display: grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:10px;margin-top:12px;}
-    .tools {display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    table {
-      width:100%;border-collapse:collapse;margin-top:15px;
-      background: rgba(255,255,255,0.9);border-radius: 10px;overflow:hidden;
-    }
-    th,td {padding:10px;text-align:center;border-bottom:1px solid #eee;vertical-align: middle;}
-    th {background:#f8fbff;font-weight:bold;color:#333;}
-    .mono {font-family: ui-monospace, Menlo, Consolas, "SF Mono", monospace;}
-    .badge {display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    h1 img{height:28px;vertical-align:middle;margin-right:8px;}
+    .sub{text-align:center;color:#eef;font-size:13px;margin-bottom:10px;}
+    .card{background:var(--glass);border-radius:16px;padding:16px;margin:14px auto;max-width:900px;box-shadow:0 8px 24px rgba(0,0,0,.1);}
+    label{font-weight:700;color:#444;}
+    input,textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:15px;outline:none;background:#fff;transition:.2s;}
+    input:focus,textarea:focus{border-color:var(--brand-1);box-shadow:0 0 8px rgba(111,168,220,.35);}
+    button{padding:10px 12px;border:none;border-radius:8px;font-size:15px;cursor:pointer;transition:.2s;}
+    button.primary{background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;}
+    button.primary:hover{filter:brightness(.95)}
+    button.secondary{background:#fff;border:1px solid #bbb;color:#333;}
+    button.secondary:hover{background:#f0f0f0;}
+    .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    table{width:100%;border-collapse:collapse;margin-top:15px;background:rgba(255,255,255,.9);border-radius:10px;overflow:hidden;}
+    th,td{padding:10px;text-align:center;border-bottom:1px solid #eee;vertical-align:middle;}
+    th{background:#f8fbff;font-weight:bold;color:#333;}
+    .mono{font-family:ui-monospace,Menlo,Consolas,"SF Mono",monospace;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
     .ok{background:#e8f5e9;color:var(--ok);border:1px solid #c8e6c9}
     .err{background:#ffebee;color:var(--err);border:1px solid #ffcdd2}
-    .guide {max-width:980px;margin:14px auto;text-align:center;}
-    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
-    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
-    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-    .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
-    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
-    footer {
-      background: rgba(30, 60, 120, 0.9);
-      padding: 16px;
-      margin-top: 20px;
-    }
-    .footer-inner {
-      text-align: center;
-      color: #fff;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-    .footer-inner b { color: #ffd966; }
-    #counter {
-      font-size: 15px;
-      margin-bottom: 8px;
-      font-weight: bold;
-      text-shadow: 0 0 6px rgba(0,0,0,0.4);
-      color: #fff;
-    }
-    .disclaimer {
-      font-size: 12px;
-      color: #ddd;
-      margin-top: 6px;
-    }
-    .updating {
-      margin-top: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      background: linear-gradient(90deg, #ffd966, #ff9a76, #ffd966);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: glow 3s linear infinite;
-      text-shadow: 0 0 8px rgba(255, 215, 100, 0.6);
-      display: inline-block;
-    }
-    @keyframes glow {
-      0% { background-position: 0% center; }
-      50% { background-position: 100% center; }
-      100% { background-position: 0% center; }
-    }
+    .debug{margin-top:10px;background:#fff;border:1px dashed #ccd;padding:10px;border-radius:10px;}
+    summary{cursor:pointer;user-select:none}
+    footer{background:rgba(30,60,120,.9);padding:16px;margin-top:20px;}
+    .footer-inner{text-align:center;color:#fff;font-size:14px;line-height:1.8;}
+    .footer-inner b{color:#ffd966;}
+    #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
+    .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
   </style>
 </head>
 <body>
-  <h1>
-    <img src="logo.jpeg" alt="logo">
-    光遇身高查詢
-  </h1>
-  <div class="sub">Base64Url 解碼 + height/scale 智慧解析</div>
+  <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
+  <div class="sub">Base64Url 解碼 + height/scale 解析</div>
 
   <!-- 教學 -->
-  <section class="guide">
-    <h2>使用教學</h2>
-    <div class="guide-grid">
-      <figure class="step">
-        <img src="IMG_3171.jpeg" alt="步驟1">
-        <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
-      </figure>
-      <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
-      <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
-    </div>
+  <section class="card">
+    <label>使用教學</label>
+    <ol style="margin:8px 0 0 18px;">
+      <li>開啟遊戲 → 帳號資訊 → 顯示 QRcode</li>
+      <li>掃描 QRcode，複製網址</li>
+      <li>貼到下方輸入框，點「解析」</li>
+    </ol>
   </section>
 
   <!-- 單一 -->
   <div class="card">
     <label for="single">單一連結</label>
-    <input id="single" placeholder="貼上網址 / o=... / token" class="mono">
+    <input id="single" placeholder="貼上網址 / o=... / token" class="mono" autocomplete="off" spellcheck="false">
     <div class="row">
       <button class="primary" onclick="runSingle()">解析</button>
       <button class="secondary" onclick="clearSingle()">清除</button>
     </div>
     <div id="singleOut"></div>
+
+    <!-- 除錯資訊：顯示解碼片段 -->
+    <details class="debug">
+      <summary>🔧 除錯區（顯示解碼片段，已安全轉義）</summary>
+      <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;"></pre>
+    </details>
   </div>
 
   <!-- 批次 -->
@@ -174,72 +104,202 @@
     <div class="footer-inner">
       <div id="counter">累積使用次數：載入中...</div>
       <div>製作者：<b>言陌</b></div>
-      <div class="updating">🕯️ 此網頁持續更新</div>
       <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
     </div>
   </footer>
 
 <script>
-function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+/* ========= 實用工具 ========= */
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
+
+// 只保留可見 ASCII，避免控制碼干擾
+function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); }
+
+/* ========= 取 token / 解碼 ========= */
 function extractOToken(input){
-  let s=(input||"").trim().replace(/\s+/g,"");
-  const head=s.match(/^o(?:=|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
-  try{const u=new URL(s);const q=u.searchParams.get("o");if(q) return q;}catch{}
-  const m=s.match(/o(?:=|%3D)([-_A-Za-z0-9]+)/i);if(m) return m[1];
+  let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
+  const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
+  try{
+    const u=new URL(s);
+    const q=u.searchParams.get("o"); if(q) return q;
+    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i); if(mPath) return mPath[1];
+  }catch{}
+  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(m) return m[1];
   if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
   throw new Error("找不到 o 參數");
 }
 function b64urlToText(token){
+  if(!token) throw new Error('空的 token');
+  try{token=decodeURIComponent(token);}catch{}
   let b64=token.replace(/-/g,'+').replace(/_/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
-  return atob(b64);
+  try{ return atob(b64); }catch(e){}
+  try{
+    const bin=atob(b64),bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i)&0xFF;
+    return new TextDecoder('utf-8',{fatal:false}).decode(bytes);
+  }catch(e){}
+  try{
+    const bin=atob(b64);let cleaned='';
+    for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}
+    return cleaned;
+  }catch(e){throw new Error('base64 解碼失敗');}
 }
+
+/* ========= JSON 區塊掃描 ========= */
+function scanJsonBlocks(text){
+  const collect=(s)=>{const blocks=[];let start=-1,depth=0,inStr=false,esc=false;
+    for(let i=0;i<s.length;i++){const ch=s[i];
+      if(start===-1){if(ch==='{'){start=i;depth=1;inStr=false;esc=false;}continue;}
+      if(esc){esc=false;continue;}
+      if(ch==='\\'){esc=true;continue;}
+      if(ch==='"'){inStr=!inStr;continue;}
+      if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
+    }return blocks;};
+  let blocks=collect(text); if(blocks.length) return blocks;
+  let cleaned=''; for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';} return collect(cleaned);
+}
+function findHeightScale(obj){
+  if(obj&&typeof obj==="object"){
+    if("height" in obj && "scale" in obj) return {height:obj.height,scale:obj.scale};
+    for(const k in obj){try{const r=findHeightScale(obj[k]); if(r) return r;}catch{}}
+  }
+  return null;
+}
+
+/* ========= 寬容度更高的抓取 ========= */
+// 把像 "heigh)" / "Pheigh)" 視為 height；允許 .123
+function grabHeightFromText(s){
+  s = vis(s);
+  const m = s.match(/heigh[t\)]?[^0-9-]{0,1000}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+  if(!m) return null;
+  const raw = m[1];
+  return parseFloat(raw.startsWith('.') ? ('0'+raw) : raw);
+}
+// 支援 "scale 013561397"（無小數點）或 ".123"
+function grabScaleFromText(s){
+  s = vis(s);
+  const m = s.match(/scale[^0-9-]{0,1500}(-?(?:\d+(?:\.\d+)?|\.\d+)|0\d{6,10})/i);
+  if(!m) return null;
+  let raw = m[1];
+  if (raw.startsWith('.')) return parseFloat('0'+raw);
+  if (/^0\d{6,10}$/.test(raw)) {
+    const digits = raw.slice(1);
+    const cand2 = parseFloat('0.0'+digits);
+    const cand1 = parseFloat('0.' +digits);
+    return (cand2 < 0.2) ? cand2 : cand1;
+  }
+  return parseFloat(raw);
+}
+
+/* ========= 統一的解析函式（同時提供錯誤片段） ========= */
+function parseHeightScaleFromUrl(input){
+  const token = extractOToken(input);
+  const decoded = b64urlToText(token);
+
+  // 顯示除錯片段（成功或失敗都會更新）
+  const rawEl = document.getElementById('rawSnippet');
+  if(rawEl){ rawEl.textContent = escapeHtml(decoded.slice(0, 1200)); }
+
+  // 先嘗試直接抓
+  let h = grabHeightFromText(decoded);
+  let s = grabScaleFromText(decoded);
+  if (h!=null && s!=null) return {height:h, scale:s};
+
+  // 再掃 JSON 區塊（部分裝置會帶 JSON）
+  const blocks = scanJsonBlocks(decoded);
+  for (const js of blocks) {
+    try { const data = JSON.parse(js); const r = findHeightScale(data); if(r) return r; } catch{}
+    try { const cleaned = js.replace(/[^\x20-\x7E]/g,' '); const data2 = JSON.parse(cleaned); const r2 = findHeightScale(data2); if(r2) return r2; } catch{}
+  }
+
+  // 最後失敗：回傳帶片段的錯誤（跟你截圖一樣的風格）
+  const ultra = vis(decoded);
+  const snippet = ultra.slice(0, 600);
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + snippet);
+}
+
+/* ========= 單一 / 批次流程 ========= */
 function runSingle(){
   const url=document.getElementById('single').value.trim();
-  const out=document.getElementById('singleOut');out.innerHTML='';
+  const out=document.getElementById('singleOut'); out.innerHTML='';
+  const t0=performance.now();
   try{
-    const token=extractOToken(url);
-    const text=b64urlToText(token);
-    const h=text.match(/height.?(\d\.\d+)/i);
-    const s=text.match(/scale.?(\d\.\d+)/i);
-    if(!h||!s) throw new Error("解析失敗");
-    const height=parseFloat(h[1]),scale=parseFloat(s[1]);
+    const {height,scale}=parseHeightScaleFromUrl(url);
     const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
+    const ms=(performance.now()-t0).toFixed(1);
     out.innerHTML=`<table>
-      <tr><th>height</th><td>${fmt(height)}</td></tr>
-      <tr><th>scale</th><td>${fmt(scale)}</td></tr>
-      <tr><th>身高</th><td>${fmt(val)}</td></tr>
-      <tr><th>最高(h=2)</th><td>${fmt(hi)}</td></tr>
-      <tr><th>最低(h=-2)</th><td>${fmt(lo)}</td></tr>
+      <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
+      <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
+      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
+      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
+      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
+      <tr><th>耗時</th><td>${ms} ms</td></tr>
     </table>`;
-  }catch(e){out.textContent="錯誤："+e.message;}
+  }catch(e){
+    out.innerHTML = `<div class="badge err">錯誤</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
+  }
 }
-function clearSingle(){document.getElementById('single').value='';document.getElementById('singleOut').innerHTML=''}
+function clearSingle(){
+  document.getElementById('single').value='';
+  document.getElementById('singleOut').innerHTML='';
+  const rawEl = document.getElementById('rawSnippet'); if(rawEl) rawEl.textContent='';
+}
+
 function runBatch(){
   const txt=document.getElementById('batch').value.trim();
-  const out=document.getElementById('batchOut');out.innerHTML='';
+  const out=document.getElementById('batchOut'); out.innerHTML='';
   if(!txt) return;
-  const lines=txt.split(/\n/).map(s=>s.trim()).filter(Boolean);
-  let html='<table><tr><th>#</th><th>連結</th><th>身高</th><th>狀態</th></tr>';
+  const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>狀態</th></tr></thead><tbody>';
   lines.forEach((link,i)=>{
     try{
-      const token=extractOToken(link);
-      const text=b64urlToText(token);
-      const h=text.match(/height.?(\d\.\d+)/i);
-      const s=text.match(/scale.?(\d\.\d+)/i);
-      if(!h||!s) throw new Error("解析失敗");
-      const height=parseFloat(h[1]),scale=parseFloat(s[1]);
-      const val=calc(height,scale);
-      html+=`<tr><td>${i+1}</td><td>${escapeHtml(link)}</td><td>${fmt(val)}</td><td><span class="badge ok">OK</span></td></tr>`;
+      const r=parseHeightScaleFromUrl(link);
+      const val=calc(r.height,r.scale);
+      html+=`<tr>
+        <td>${i+1}</td>
+        <td class="mono" style="max-width:320px;overflow-wrap:anywhere;">${escapeHtml(link)}</td>
+        <td class="mono">${fmt(r.height)}</td>
+        <td class="mono">${fmt(r.scale)}</td>
+        <td class="mono">${fmt(val)}</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>`;
     }catch(e){
-      html+=`<tr><td>${i+1}</td><td>${escapeHtml(link)}</td><td>—</td><td><span class="badge err">錯誤</span></td></tr>`;
+      html+=`<tr>
+        <td>${i+1}</td>
+        <td class="mono" style="max-width:320px;overflow-wrap:anywhere;">${escapeHtml(link)}</td>
+        <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
+        <td><span class="badge err" title="${escapeHtml(e.message||String(e))}">錯誤</span></td>
+      </tr>`;
     }
   });
-  html+='</table>';
+  html+='</tbody></table>';
   out.innerHTML=html;
 }
-function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML=''}
+function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML='';}
+
+/* ========= 計數器（遠端失敗時用本機） ========= */
+(function () {
+  const el = document.getElementById('counter');
+  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
+  const KEY = 'local-visit-count';
+  const tickLocal = () => {
+    try {
+      const v = (parseInt(localStorage.getItem(KEY) || '0', 10) + 1);
+      localStorage.setItem(KEY, v);
+      el.textContent = '累積使用次數（本機）：' + v;
+    } catch (e) {
+      el.textContent = '累積使用次數：暫時無法取得';
+    }
+  };
+  fetch(COUNTER_URL, { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => { el.textContent = '累積使用次數：' + d.value; })
+    .catch(err => { console.log('counter error:', err); tickLocal(); });
+})();
+
+/* ========= PWA（可選） ========= */
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 </script>
 </body>
