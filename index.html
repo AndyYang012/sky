@@ -55,20 +55,37 @@
     .footer-inner b{color:#ffd966;}
     #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
     .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
+
+    /* 圖片教學樣式 */
+    .guide {max-width:980px;margin:14px auto;text-align:center;}
+    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
+    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
+    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);cursor:pointer;}
+    .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
+    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
   </style>
 </head>
 <body>
   <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
   <div class="sub">Base64Url 解碼 + height/scale 解析</div>
 
-  <!-- 教學 -->
-  <section class="card">
-    <label>使用教學</label>
-    <ol style="margin:8px 0 0 18px;">
-      <li>開啟遊戲 → 帳號資訊 → 顯示 QRcode</li>
-      <li>掃描 QRcode，複製網址</li>
-      <li>貼到下方輸入框，點「解析」</li>
-    </ol>
+  <!-- 圖片教學（可點圖預覽） -->
+  <section class="guide">
+    <h2>使用教學</h2>
+    <div class="guide-grid">
+      <figure class="step" onclick="openPreview(this)">
+        <img src="IMG_3171.jpeg" alt="步驟1">
+        <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+      </figure>
+      <figure class="step" onclick="openPreview(this)">
+        <img src="IMG_3172.jpeg" alt="步驟2">
+        <figcaption>步驟2：掃描 QRcode，複製網址</figcaption>
+      </figure>
+      <figure class="step" onclick="openPreview(this)">
+        <img src="IMG_3173.jpeg" alt="步驟3">
+        <figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption>
+      </figure>
+    </div>
   </section>
 
   <!-- 單一 -->
@@ -113,9 +130,7 @@
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
-
-// 只保留可見 ASCII，避免控制碼干擾
-function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); }
+function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); } // 清除不可見字元
 
 /* ========= 取 token / 解碼 ========= */
 function extractOToken(input){
@@ -169,13 +184,22 @@ function findHeightScale(obj){
 }
 
 /* ========= 寬容度更高的抓取 ========= */
-// 把像 "heigh)" / "Pheigh)" 視為 height；允許 .123
+// 優先只抓「有小數點」且貼近 height 的值，避免抓到 3617717 這種整數
 function grabHeightFromText(s){
   s = vis(s);
-  const m = s.match(/heigh[t\)]?[^0-9-]{0,1000}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
-  if(!m) return null;
-  const raw = m[1];
-  return parseFloat(raw.startsWith('.') ? ('0'+raw) : raw);
+  const m1 = s.match(/heigh[t\)]?[^0-9-]{0,50}(-?(?:\d*\.\d{1,9}))/i);
+  if(m1){
+    let raw = m1[1];
+    if (raw.startsWith('.')) raw = '0'+raw;
+    return parseFloat(raw);
+  }
+  const m2 = s.match(/heigh[t\)]?[^0-9-]{0,1000}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+  if(m2){
+    let raw = m2[1];
+    if (raw.startsWith('.')) raw = '0'+raw;
+    return parseFloat(raw);
+  }
+  return null;
 }
 // 支援 "scale 013561397"（無小數點）或 ".123"
 function grabScaleFromText(s){
@@ -193,34 +217,34 @@ function grabScaleFromText(s){
   return parseFloat(raw);
 }
 
-/* ========= 統一的解析函式（同時提供錯誤片段） ========= */
+/* ========= 統一的解析（含錯誤片段） ========= */
 function parseHeightScaleFromUrl(input){
   const token = extractOToken(input);
   const decoded = b64urlToText(token);
 
-  // 顯示除錯片段（成功或失敗都會更新）
+  // 顯示除錯片段
   const rawEl = document.getElementById('rawSnippet');
   if(rawEl){ rawEl.textContent = escapeHtml(decoded.slice(0, 1200)); }
 
-  // 先嘗試直接抓
+  // 先嘗試文字抓取
   let h = grabHeightFromText(decoded);
   let s = grabScaleFromText(decoded);
   if (h!=null && s!=null) return {height:h, scale:s};
 
-  // 再掃 JSON 區塊（部分裝置會帶 JSON）
+  // 再試 JSON 區塊
   const blocks = scanJsonBlocks(decoded);
   for (const js of blocks) {
     try { const data = JSON.parse(js); const r = findHeightScale(data); if(r) return r; } catch{}
     try { const cleaned = js.replace(/[^\x20-\x7E]/g,' '); const data2 = JSON.parse(cleaned); const r2 = findHeightScale(data2); if(r2) return r2; } catch{}
   }
 
-  // 最後失敗：回傳帶片段的錯誤（跟你截圖一樣的風格）
+  // 失敗：帶片段訊息
   const ultra = vis(decoded);
   const snippet = ultra.slice(0, 600);
   throw new Error('找不到 JSON 或 height/scale，片段: ' + snippet);
 }
 
-/* ========= 單一 / 批次流程 ========= */
+/* ========= 單一 / 批次 ========= */
 function runSingle(){
   const url=document.getElementById('single').value.trim();
   const out=document.getElementById('singleOut'); out.innerHTML='';
@@ -278,6 +302,18 @@ function runBatch(){
   out.innerHTML=html;
 }
 function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML='';}
+
+/* ========= 圖片預覽（點圖放大） ========= */
+function openPreview(fig){
+  const img = fig.querySelector('img'); if(!img) return;
+  const src = img.src, alt = img.alt || '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
+  overlay.innerHTML = `<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
+  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
+  document.body.appendChild(overlay);
+}
 
 /* ========= 計數器（遠端失敗時用本機） ========= */
 (function () {
