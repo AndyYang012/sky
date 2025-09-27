@@ -219,19 +219,31 @@ function grabHeightFromText(s){
 }
 
 // 支援 "scale 013561397"（無小數點）或 ".123"
+// 更健壯的 scale 擷取：先抓標準小數/整數；抓不到再處理長整數（無小數點）
 function grabScaleFromText(s){
   s = vis(s);
-  const m = s.match(/scale[^0-9-]{0,1500}(-?(?:\d+(?:\.\d+)?|\.\d+)|0\d{6,10})/i);
-  if(!m) return null;
-  let raw = m[1];
-  if (raw.startsWith('.')) return parseFloat('0'+raw);
-  if (/^0\d{6,10}$/.test(raw)) {
-    const digits = raw.slice(1);
-    const cand2 = parseFloat('0.0'+digits);
-    const cand1 = parseFloat('0.' +digits);
+
+  // ① 正常格式（含負號）：-0.035、0.12、.34、1、1.0
+  //   注意：把「:」後的數字排除掉，只抓真正的數值
+  const m = s.match(/scale[^0-9-]{0,120}(-?(?:\d*\.\d+|\d+\.?\d*))/i);
+  if (m) {
+    let raw = m[1];
+    if (raw.startsWith('.')) raw = '0' + raw;
+    const v = parseFloat(raw);
+    if (!Number.isNaN(v)) return v;
+  }
+
+  // ② 退而求其次：長整數（沒有小數點），例如 "scale 1196549" 或 "scale 01196549"
+  const m2 = s.match(/scale[^0-9-]{0,120}(0?\d{6,10})/i);
+  if (m2) {
+    const digits = m2[1].replace(/^0/, ''); // 去掉單一前導 0（若有）
+    const cand1 = parseFloat('0.'  + digits);
+    const cand2 = parseFloat('0.0' + digits);
+    // 優先回傳 < 0.2 的候選（較符合實際）
     return (cand2 < 0.2) ? cand2 : cand1;
   }
-  return parseFloat(raw);
+
+  return null;
 }
 
 function grabHeightNearScale(s){
@@ -255,7 +267,7 @@ function parseHeightScaleFromUrl(input){
   // 除錯區：就近片段（配合新擷取邏輯）
   const clean = vis(decoded);
   const ctxH  = around(clean, /(?:heigh[t\)]?|eight")\s*[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+))/i, 200);
-  const ctxS  = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+)|0\d{6,10}|\d{6,9})/i, 200);
+  const ctxS = around(clean,/scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.?\d*)|0?\d{6,10})/i,200);
   const rawEl = document.getElementById('rawSnippet');
   const hEl   = document.getElementById('ctxHeight');
   const sEl   = document.getElementById('ctxScale');
