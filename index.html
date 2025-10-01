@@ -201,51 +201,49 @@ function findHeightScale(obj){
   return null;
 }
 
+/* ====== 抓 height（寬鬆版） ====== */
 function grabHeightFromText(s){
   s = vis(s);
-  const m1 = s.match(/heigh[t\)]?[^0-9-]{0,50}(-?(?:\d*\.\d{1,9}|\d+(?:\.\d+)?))/i);
-  if(m1){
+  // 支援 heigh(t) / eigh / "eight"
+  const m1 = s.match(/(?:heig?h|eigh|eight)\s*[\):"]?[^0-9-]{0,80}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+  if (m1) {
     let raw = m1[1];
-    if (raw.startsWith('.')) raw = '0'+raw;
-    return parseFloat(raw);
-  }
-  const m2 = s.match(/eight"\s*:\s*(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
-  if(m2){
-    let raw = m2[1];
-    if (raw.startsWith('.')) raw = '0'+raw;
-    return parseFloat(raw);
+    if (raw.startsWith('.')) raw = '0' + raw;
+    const v = parseFloat(raw);
+    if (!Number.isNaN(v)) return v;
   }
   return null;
 }
 
-// 支援 "scale 013561397"（無小數點）或 ".123"
-// 更健壯的 scale 擷取：先抓標準小數/整數；抓不到再處理長整數（無小數點）
+/* ====== 抓 scale（健壯版 + 範圍防呆） ====== */
 function grabScaleFromText(s){
   s = vis(s);
 
-  // ① 正常格式（含負號）：-0.035、0.12、.34、1、1.0
-  //   注意：把「:」後的數字排除掉，只抓真正的數值
+  // ① 標準小數/整數（含負號）：-0.035、0.12、.34、1、1.0
   const m = s.match(/scale[^0-9-]{0,120}(-?(?:\d*\.\d+|\d+\.?\d*))/i);
   if (m) {
     let raw = m[1];
     if (raw.startsWith('.')) raw = '0' + raw;
     const v = parseFloat(raw);
-    if (!Number.isNaN(v)) return v;
+    // 合理性檢查：scale 不可能超大；>10 視為誤抓（例如把 ID/seed 抓來了）
+    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
   }
 
-  // ② 退而求其次：長整數（沒有小數點），例如 "scale 1196549" 或 "scale 01196549"
+  // ② 後備：無小數點的長整數（常見誤格式 e.g. "scale 1196549" 或 "scale 01196549"）
   const m2 = s.match(/scale[^0-9-]{0,120}(0?\d{6,10})/i);
   if (m2) {
-    const digits = m2[1].replace(/^0/, ''); // 去掉單一前導 0（若有）
-    const cand1 = parseFloat('0.'  + digits);
-    const cand2 = parseFloat('0.0' + digits);
-    // 優先回傳 < 0.2 的候選（較符合實際）
-    return (cand2 < 0.2) ? cand2 : cand1;
+    const digits = m2[1].replace(/^0/, '');   // 去單一前導 0（若有）
+    const cand1  = parseFloat('0.'  + digits);
+    const cand2  = parseFloat('0.0' + digits);
+    const v = (cand2 < 0.2) ? cand2 : cand1; // 優先挑比較小、較合理的
+    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
   }
 
+  // 都抓不到就回傳 null，讓後續 JSON 掃描處理
   return null;
 }
 
+/* ====== 若有 scale 但沒 height：在 scale 前 80 字找最後一個數字補 height ====== */
 function grabHeightNearScale(s){
   s = vis(s);
   const p = s.search(/scale/i);
@@ -259,15 +257,15 @@ function grabHeightNearScale(s){
   return Number.isNaN(v) ? null : v;
 }
 
-/* ========= 統一的解析（含錯誤片段） ========= */
+/* ====== 主解析：更新除錯 regex + 回補 height + JSON 後備 ====== */
 function parseHeightScaleFromUrl(input){
   const token   = extractOToken(input);
   const decoded = b64urlToText(token);
 
-  // 除錯區：就近片段（配合新擷取邏輯）
+  // 除錯區：就近片段（與上面邏輯一致）
   const clean = vis(decoded);
   const ctxH  = around(clean, /(?:heigh[t\)]?|eight")\s*[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+))/i, 200);
-  const ctxS = around(clean,/scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.?\d*)|0?\d{6,10})/i,200);
+  const ctxS  = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.?\d*)|0?\d{6,10})/i, 200);
   const rawEl = document.getElementById('rawSnippet');
   const hEl   = document.getElementById('ctxHeight');
   const sEl   = document.getElementById('ctxScale');
@@ -275,18 +273,19 @@ function parseHeightScaleFromUrl(input){
   if (sEl)   sEl.textContent   = ctxS || '(未抓到 scale 片段)';
   if (rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
 
-  // 解析
+  // Step 1：文字擷取
   let h = grabHeightFromText(decoded);
   let s = grabScaleFromText(decoded);
 
-  // 若有 scale 但沒有 height，回溯補 height（在 scale 前 80 字元找最後一個數字）
-  if (s != null && h == null && typeof grabHeightNearScale === 'function') {
+  // Step 2：若先抓到 scale 但沒有 height，回溯補 height
+  if (s != null && h == null) {
     h = grabHeightNearScale(decoded);
   }
 
+  // Step 3：成功就回傳
   if (h != null && s != null) return { height: h, scale: s };
 
-  // JSON 區塊嘗試（保留原邏輯）
+  // Step 4：JSON 區塊掃描（保留原本 fallback）
   const blocks = scanJsonBlocks(decoded);
   for (const js of blocks) {
     try {
