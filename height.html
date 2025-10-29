@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>光遇身高查詢</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --brand-1:#6fa8dc; --brand-2:#3d85c6;
+      --bg-1:#a1c4fd; --bg-2:#c2e9fb;
+      --glass: rgba(255,255,255,0.85);
+      --text:#333; --muted:#666;
+      --ok:#2e7d32; --err:#c62828;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+      background:linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
+      color:var(--text);line-height:1.6;
+    }
+    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;max-width:1000px;margin:0 auto;}
+    header h1{margin:0;font-size:26px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;}
+    header h1 img{height:30px;}
+    header a.back{color:#fff;text-decoration:none;font-weight:600;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(6px);transition:.2s;}
+    header a.back:hover{background:rgba(255,255,255,.28);}
+    main{max-width:1000px;margin:0 auto 40px;padding:0 14px;}
+    .sub{text-align:center;color:#eef;font-size:13px;margin-bottom:10px;}
+    .card{background:var(--glass);border-radius:16px;padding:16px;margin:14px auto;max-width:900px;box-shadow:0 8px 24px rgba(0,0,0,.1);}
+    .card.intro{line-height:1.8;}
+    .card.intro h2{margin:0 0 6px;color:var(--brand-2);text-align:center;}
+    .card.intro p{margin:0;color:var(--muted);}
+    .card.intro ul{margin:12px 0 0;padding-left:1.3em;color:var(--muted);}
+    .card.intro li{margin-bottom:8px;}
+    label{font-weight:700;color:#444;}
+    input,textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:15px;outline:none;background:#fff;transition:.2s;}
+    input:focus,textarea:focus{border-color:var(--brand-1);box-shadow:0 0 8px rgba(111,168,220,.35);}
+    button{padding:10px 12px;border:none;border-radius:8px;font-size:15px;cursor:pointer;transition:.2s;}
+    button.primary{background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;}
+    button.primary:hover{filter:brightness(.95)}
+    button.secondary{background:#fff;border:1px solid #bbb;color:#333;}
+    button.secondary:hover{background:#f0f0f0;}
+    .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    table{width:100%;border-collapse:collapse;margin-top:15px;background:rgba(255,255,255,.9);border-radius:10px;overflow:hidden;}
+    th,td{padding:10px;text-align:center;border-bottom:1px solid #eee;vertical-align:middle;}
+    th{background:#f8fbff;font-weight:bold;color:#333;}
+    .mono{font-family:ui-monospace,Menlo,Consolas,"SF Mono",monospace;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#e8f5e9;color:var(--ok);border:1px solid #c8e6c9}
+    .err{background:#ffebee;color:var(--err);border:1px solid #ffcdd2}
+    .debug{margin-top:10px;background:#fff;border:1px dashed #ccd;padding:10px;border-radius:10px;}
+    summary{cursor:pointer;user-select:none}
+    footer{background:rgba(30,60,120,.9);padding:16px;margin-top:20px;}
+    .footer-inner{text-align:center;color:#fff;font-size:14px;line-height:1.8;}
+    .footer-inner b{color:#ffd966;}
+    #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
+    .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
+    .guide {max-width:980px;margin:14px auto;text-align:center;}
+    .guide h3 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
+    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
+    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);cursor:pointer;}
+    .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
+    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
+    <a class="back" href="index.html">← 返回主畫面</a>
+  </header>
+
+  <main>
+    <p class="sub">Base64Url 解碼 + height/scale 解析</p>
+
+    <section class="card intro">
+      <h2>工具中文解釋</h2>
+      <p>這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：</p>
+      <ul>
+        <li>先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。</li>
+        <li>若結果異常，請至 DC 群尋求管理員協助處理。</li>
+        <li>需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。</li>
+        <li>下方的使用教學提供截圖引導，點擊圖片即可放大檢視。</li>
+      </ul>
+    </section>
+
+    <section class="guide">
+      <h3>使用教學</h3>
+      <div class="guide-grid">
+        <figure class="step" onclick="openPreview(this)">
+          <img src="IMG_3171.jpeg" alt="步驟1">
+          <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+        </figure>
+        <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
+        <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
+      </div>
+    </section>
+
+    <div class="card">
+      <label for="single">單一連結</label>
+      <input id="single" placeholder="貼上網址 / o=... / token" class="mono" autocomplete="off" spellcheck="false">
+      <div class="row">
+        <button class="primary" onclick="runSingle()">解析</button>
+        <button class="secondary" onclick="clearSingle()">清除</button>
+      </div>
+      <div id="singleOut"></div>
+
+      <details class="debug">
+        <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
+        <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
+        <div style="display:grid;gap:8px">
+          <div>
+            <b>height 片段：</b>
+            <pre id="ctxHeight" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+          </div>
+          <div>
+            <b>scale 片段：</b>
+            <pre id="ctxScale" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+          </div>
+          <div>
+            <b>通用片段（fallback）：</b>
+            <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <label for="batch">多條連結（每行一條）</label>
+      <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" class="mono"></textarea>
+      <div class="tools">
+        <button class="primary" onclick="runBatch()">批次解析</button>
+        <button class="secondary" onclick="clearBatch()">清除</button>
+      </div>
+      <div id="batchOut"></div>
+    </div>
+
+    <footer>
+      <div class="footer-inner">
+        <div id="counter">累積使用次數：載入中...</div>
+        <div>製作者：<b>言陌</b></div>
+        <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
+function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
+function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
+function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); }
+function around(text, re, radius=180){
+  try{
+    const m = text.match(re);
+    if(!m) return '';
+    const i = m.index ?? text.indexOf(m[0]);
+    const start = Math.max(0, i - radius);
+    const end   = Math.min(text.length, i + m[0].length + radius);
+    return escapeHtml(text.slice(start, end));
+  }catch{ return ''; }
+}
+
+function extractOToken(input){
+  let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
+  const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
+  try{
+    const u=new URL(s);
+    const q=u.searchParams.get("o"); if(q) return q;
+    const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i); if(mPath) return mPath[1];
+  }catch{}
+  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(m) return m[1];
+  if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
+  throw new Error("找不到 o 參數");
+}
+function b64urlToText(token){
+  if(!token) throw new Error('空的 token');
+  try{token=decodeURIComponent(token);}catch{}
+  let b64=token.replace(/-/g,'+').replace(/_/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
+  try{ return atob(b64); }catch(e){}
+  try{
+    const bin=atob(b64),bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i)&0xFF;
+    return new TextDecoder('utf-8',{fatal:false}).decode(bytes);
+  }catch(e){}
+  try{
+    const bin=atob(b64);let cleaned='';
+    for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}
+    return cleaned;
+  }catch(e){throw new Error('base64 解碼失敗');}
+}
+
+function scanJsonBlocks(text){
+  const collect=(s)=>{const blocks=[];let start=-1,depth=0,inStr=false,esc=false;
+    for(let i=0;i<s.length;i++){const ch=s[i];
+      if(start===-1){if(ch==='{'){start=i;depth=1;inStr=false;esc=false;}continue;}
+      if(esc){esc=false;continue;}
+      if(ch==='\\'){esc=true;continue;}
+      if(ch==='"'){inStr=!inStr;continue;}
+      if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
+    }return blocks;};
+  let blocks=collect(text); if(blocks.length) return blocks;
+  let cleaned=''; for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';} return collect(cleaned);
+}
+function findHeightScale(obj){
+  if(obj&&typeof obj==="object"){
+    if("height" in obj && "scale" in obj) return {height:obj.height,scale:obj.scale};
+    for(const k in obj){try{const r=findHeightScale(obj[k]); if(r) return r;}catch{}}
+  }
+  return null;
+}
+
+function grabHeightFromText(s){
+  s = vis(s);
+  const m1 = s.match(/(?:heig?h|eigh|eight)\s*[\):"]?[^0-9-]{0,80}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
+  if (m1) {
+    let raw = m1[1];
+    if (raw.startsWith('.')) raw = '0' + raw;
+    const v = parseFloat(raw);
+    if (!Number.isNaN(v)) return v;
+  }
+  return null;
+}
+
+function grabScaleFromText(s){
+  s = vis(s);
+  const m = s.match(/scale[^0-9-]{0,120}(-?(?:\d*\.\d+|\d+\.?\d*))/i);
+  if (m) {
+    let raw = m[1];
+    if (raw.startsWith('.')) raw = '0' + raw;
+    const v = parseFloat(raw);
+    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
+  }
+  const m2 = s.match(/scale[^0-9-]{0,120}(0?\d{6,10})/i);
+  if (m2) {
+    const digits = m2[1].replace(/^0/, '');
+    const cand1  = parseFloat('0.'  + digits);
+    const cand2  = parseFloat('0.0' + digits);
+    const v = (cand2 < 0.2) ? cand2 : cand1;
+    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
+  }
+  return null;
+}
+
+function grabHeightNearScale(s){
+  s = vis(s);
+  const p = s.search(/scale/i);
+  if (p < 0) return null;
+  const seg  = s.slice(Math.max(0, p - 80), p);
+  const nums = [...seg.matchAll(/-?(?:\d+\.\d+|\.\d+|\d+)/g)];
+  if (!nums.length) return null;
+  let raw = nums[nums.length - 1][0];
+  if (raw.startsWith('.')) raw = '0' + raw;
+  const v = parseFloat(raw);
+  return Number.isNaN(v) ? null : v;
+}
+
+function parseHeightScaleFromUrl(input){
+  const token   = extractOToken(input);
+  const decoded = b64urlToText(token);
+
+  const clean = vis(decoded);
+  const ctxH  = around(clean, /(?:heigh[t\)]?|eight")\s*[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+))/i, 200);
+  const ctxS  = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.?\d*)|0?\d{6,10})/i, 200);
+  const rawEl = document.getElementById('rawSnippet');
+  const hEl   = document.getElementById('ctxHeight');
+  const sEl   = document.getElementById('ctxScale');
+  if (hEl)   hEl.textContent   = ctxH || '(未抓到 height 片段)';
+  if (sEl)   sEl.textContent   = ctxS || '(未抓到 scale 片段)';
+  if (rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
+
+  let h = grabHeightFromText(decoded);
+  let s = grabScaleFromText(decoded);
+  if (s != null && h == null) {
+    h = grabHeightNearScale(decoded);
+  }
+  if (h != null && s != null) return { height: h, scale: s };
+
+  const blocks = scanJsonBlocks(decoded);
+  for (const js of blocks) {
+    try {
+      const data = JSON.parse(js);
+      const r = findHeightScale(data);
+      if (r) return r;
+    } catch {}
+    try {
+      const repaired = js.replace(/[^\x20-\x7E]/g,' ');
+      const d2 = JSON.parse(repaired);
+      const r2 = findHeightScale(d2);
+      if (r2) return r2;
+    } catch {}
+  }
+
+  throw new Error('找不到 JSON 或 height/scale，片段: ' + clean.slice(0, 600));
+}
+
+function runSingle(){
+  const url=document.getElementById('single').value.trim();
+  const out=document.getElementById('singleOut'); out.innerHTML='';
+  const t0=performance.now();
+  try{
+    const {height,scale}=parseHeightScaleFromUrl(url);
+    const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
+    const ms=(performance.now()-t0).toFixed(1);
+    out.innerHTML=`<table>
+      <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
+      <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
+      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
+      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
+      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
+      <tr><th>耗時</th><td>${ms} ms</td></tr>
+    </table>`;
+  }catch(e){
+    out.innerHTML = `<div class="badge err">錯誤</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
+  }
+}
+function clearSingle(){
+  document.getElementById('single').value='';
+  document.getElementById('singleOut').innerHTML='';
+  const rawEl = document.getElementById('rawSnippet'); if(rawEl) rawEl.textContent='';
+  const hEl = document.getElementById('ctxHeight'); if(hEl) hEl.textContent='';
+  const sEl = document.getElementById('ctxScale'); if(sEl) sEl.textContent='';
+}
+
+function runBatch(){
+  const txt=document.getElementById('batch').value.trim();
+  const out=document.getElementById('batchOut'); out.innerHTML='';
+  if(!txt) return;
+  const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>狀態</th></tr></thead><tbody>';
+  lines.forEach((link,i)=>{
+    try{
+      const r=parseHeightScaleFromUrl(link);
+      const val=calc(r.height,r.scale);
+      html+=`<tr>
+        <td>${i+1}</td>
+        <td class="mono" style="max-width:320px;overflow-wrap:anywhere;">${escapeHtml(link)}</td>
+        <td class="mono">${fmt(r.height)}</td>
+        <td class="mono">${fmt(r.scale)}</td>
+        <td class="mono">${fmt(val)}</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>`;
+    }catch(e){
+      html+=`<tr>
+        <td>${i+1}</td>
+        <td class="mono" style="max-width:320px;overflow-wrap:anywhere;">${escapeHtml(link)}</td>
+        <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
+        <td><span class="badge err" title="${escapeHtml(e.message||String(e))}">錯誤</span></td>
+      </tr>`;
+    }
+  });
+  html+='</tbody></table>';
+  out.innerHTML=html;
+}
+function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML='';}
+
+function openPreview(fig){
+  const img = fig.querySelector('img'); if(!img) return;
+  const src = img.src, alt = img.alt || '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
+  overlay.innerHTML = `<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
+  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
+  document.body.appendChild(overlay);
+}
+
+(function () {
+  const el = document.getElementById('counter');
+  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
+  const KEY = 'local-visit-count';
+  const tickLocal = () => {
+    try {
+      const v = (parseInt(localStorage.getItem(KEY) || '0', 10) + 1);
+      localStorage.setItem(KEY, v);
+      el.textContent = '累積使用次數（本機）：' + v;
+    } catch (e) {
+      el.textContent = '累積使用次數：暫時無法取得';
+    }
+  };
+  fetch(COUNTER_URL, { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => { el.textContent = '累積使用次數：' + d.value; })
+    .catch(err => { console.log('counter error:', err); tickLocal(); });
+})();
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+  </script>
+</body>
+</html>
