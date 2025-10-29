@@ -29,6 +29,13 @@
       text-shadow:0 2px 6px rgba(0,0,0,.25);margin:0;
     }
     h1 img{height:28px;vertical-align:middle;margin-right:8px;}
+    main{max-width:1000px;margin:0 auto 40px;padding:0 14px;}
+    .view{display:none;animation:fade .25s ease both;}
+    .view.active{display:block;}
+    @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .menu{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+    .back{margin:16px 0 0 4px;background:rgba(255,255,255,.85);color:var(--brand-2);border:1px solid rgba(0,0,0,.08);padding:8px 14px;font-weight:600;}
+    .back:hover{background:#fff;}
     .sub{text-align:center;color:#eef;font-size:13px;margin-bottom:10px;}
     .card{background:var(--glass);border-radius:16px;padding:16px;margin:14px auto;max-width:900px;box-shadow:0 8px 24px rgba(0,0,0,.1);}
     label{font-weight:700;color:#444;}
@@ -58,7 +65,7 @@
 
     /* 圖片教學樣式 */
     .guide {max-width:980px;margin:14px auto;text-align:center;}
-    .guide h2 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
+    .guide h3 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
     .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
     .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);cursor:pointer;}
     .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
@@ -66,74 +73,112 @@
   </style>
 </head>
 <body>
-  <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
-  <div class="sub">Base64Url 解碼 + height/scale 解析</div>
+  <h1><img src="logo.jpeg" alt="logo">光遇小工具中心</h1>
 
-  <!-- 教學：第 1 步有圖片；第 2、3 步為單行文字 -->
-  <section class="guide">
-    <h2>使用教學</h2>
-    <div class="guide-grid">
-      <figure class="step" onclick="openPreview(this)">
-        <img src="IMG_3171.jpeg" alt="步驟1">
-        <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
-      </figure>
-      <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
-      <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
-    </div>
-  </section>
-
-  <!-- 單一 -->
-  <div class="card">
-    <label for="single">單一連結</label>
-    <input id="single" placeholder="貼上網址 / o=... / token" class="mono" autocomplete="off" spellcheck="false">
-    <div class="row">
-      <button class="primary" onclick="runSingle()">解析</button>
-      <button class="secondary" onclick="clearSingle()">清除</button>
-    </div>
-    <div id="singleOut"></div>
-
-    <!-- 除錯資訊：顯示就近片段 -->
-    <details class="debug">
-      <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
-      <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
-      <div style="display:grid;gap:8px">
-        <div>
-          <b>height 片段：</b>
-          <pre id="ctxHeight" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
-        </div>
-        <div>
-          <b>scale 片段：</b>
-          <pre id="ctxScale" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
-        </div>
-        <div>
-          <b>通用片段（fallback）：</b>
-          <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
+  <main>
+    <section id="home" class="view active">
+      <div class="sub">選擇想使用的功能</div>
+      <div class="card" style="text-align:center">
+        <h2 style="margin-top:0;color:var(--brand-2);">主畫面</h2>
+        <p style="margin:0 0 16px;color:var(--muted);">點選下方按鈕前往不同功能頁面。</p>
+        <div class="menu">
+          <button class="primary" onclick="switchView('height')">🔍 查身高</button>
+          <button class="secondary" onclick="switchView('extras')">✨ 其他功能</button>
         </div>
       </div>
-    </details>
-  </div>
+    </section>
 
-  <!-- 批次 -->
-  <div class="card">
-    <label for="batch">多條連結（每行一條）</label>
-    <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" class="mono"></textarea>
-    <div class="tools">
-      <button class="primary" onclick="runBatch()">批次解析</button>
-      <button class="secondary" onclick="clearBatch()">清除</button>
-    </div>
-    <div id="batchOut"></div>
-  </div>
+    <section id="height" class="view">
+      <button class="back" onclick="switchView('home')">← 返回主畫面</button>
+      <h2 style="text-align:center;margin:8px 0 0;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25);">光遇身高查詢</h2>
+      <div class="sub">Base64Url 解碼 + height/scale 解析</div>
 
-  <!-- Footer -->
-  <footer>
-    <div class="footer-inner">
-      <div id="counter">累積使用次數：載入中...</div>
-      <div>製作者：<b>言陌</b></div>
-      <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
-    </div>
-  </footer>
+      <section class="guide">
+        <h3>使用教學</h3>
+        <div class="guide-grid">
+          <figure class="step" onclick="openPreview(this)">
+            <img src="IMG_3171.jpeg" alt="步驟1">
+            <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+          </figure>
+          <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
+          <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
+        </div>
+      </section>
+
+      <div class="card">
+        <label for="single">單一連結</label>
+        <input id="single" placeholder="貼上網址 / o=... / token" class="mono" autocomplete="off" spellcheck="false">
+        <div class="row">
+          <button class="primary" onclick="runSingle()">解析</button>
+          <button class="secondary" onclick="clearSingle()">清除</button>
+        </div>
+        <div id="singleOut"></div>
+
+        <details class="debug">
+          <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
+          <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
+          <div style="display:grid;gap:8px">
+            <div>
+              <b>height 片段：</b>
+              <pre id="ctxHeight" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+            </div>
+            <div>
+              <b>scale 片段：</b>
+              <pre id="ctxScale" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
+            </div>
+            <div>
+              <b>通用片段（fallback）：</b>
+              <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <label for="batch">多條連結（每行一條）</label>
+        <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" class="mono"></textarea>
+        <div class="tools">
+          <button class="primary" onclick="runBatch()">批次解析</button>
+          <button class="secondary" onclick="clearBatch()">清除</button>
+        </div>
+        <div id="batchOut"></div>
+      </div>
+
+      <footer>
+        <div class="footer-inner">
+          <div id="counter">累積使用次數：載入中...</div>
+          <div>製作者：<b>言陌</b></div>
+          <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+        </div>
+      </footer>
+    </section>
+
+    <section id="extras" class="view">
+      <button class="back" onclick="switchView('home')">← 返回主畫面</button>
+      <div class="card">
+        <h2 style="margin-top:0;color:var(--brand-2);">其他功能</h2>
+        <p style="color:var(--muted);">此區預留給未來的小工具。歡迎提出建議！</p>
+      </div>
+    </section>
+  </main>
 
 <script>
+/* ========= 畫面切換 ========= */
+function switchView(id){
+  const views=document.querySelectorAll('.view');
+  let found=false;
+  views.forEach(view=>{
+    const active=view.id===id;
+    if(active) found=true;
+    view.classList.toggle('active',active);
+  });
+  if(!found){
+    switchView('home');
+    return;
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 /* ========= 實用工具 ========= */
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
