@@ -32,6 +32,11 @@
     main{max-width:1000px;margin:0 auto 40px;padding:0 14px;}
     .sub{text-align:center;color:#eef;font-size:13px;margin-bottom:10px;}
     .card{background:var(--glass);border-radius:16px;padding:16px;margin:14px auto;max-width:900px;box-shadow:0 8px 24px rgba(0,0,0,.1);}
+    .card.intro{line-height:1.8;}
+    .card.intro h2{margin:0 0 6px;color:var(--brand-2);text-align:center;}
+    .card.intro p{margin:0;color:var(--muted);}
+    .card.intro ul{margin:12px 0 0;padding-left:1.3em;color:var(--muted);}
+    .card.intro li{margin-bottom:8px;}
     label{font-weight:700;color:#444;}
     input,textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:15px;outline:none;background:#fff;transition:.2s;}
     input:focus,textarea:focus{border-color:var(--brand-1);box-shadow:0 0 8px rgba(111,168,220,.35);}
@@ -72,6 +77,17 @@
 
   <main>
     <p class="sub">Base64Url 解碼 + height/scale 解析</p>
+
+    <section class="card intro">
+      <h2>工具中文解釋</h2>
+      <p>這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：</p>
+      <ul>
+        <li>先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。</li>
+        <li>若結果異常，可展開「除錯區」檢視原始片段，確認資料是否完整。</li>
+        <li>需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。</li>
+        <li>下方的使用教學提供截圖引導，點擊圖片即可放大檢視。</li>
+      </ul>
+    </section>
 
     <section class="guide">
       <h3>使用教學</h3>

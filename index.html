@@ -33,8 +33,12 @@
     h1 img{height:32px;vertical-align:middle;margin-right:10px;}
     main{max-width:960px;margin:0 auto 32px;padding:0 16px;flex:1;width:100%;}
     .card{background:var(--glass);border-radius:18px;padding:24px;margin:18px auto;max-width:760px;box-shadow:0 12px 30px rgba(0,0,0,.15);text-align:center;}
-    .card h2{margin:0 0 10px;color:var(--brand-2);}
+    .card.info{text-align:left;}
+    .card.info h2{text-align:center;}
     .card p{margin:0 0 18px;color:var(--muted);}
+    .card ul{margin:0;padding-left:1.2em;text-align:left;color:var(--muted);line-height:1.7;}
+    .card ul li{margin-bottom:8px;}
+    .card h2{margin:0 0 10px;color:var(--brand-2);}
     .menu{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
     a.button{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:600;font-size:16px;transition:.2s;}
     a.button.primary{background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;box-shadow:0 6px 18px rgba(61,133,198,.35);}
@@ -57,6 +61,18 @@
         <a class="button secondary" href="#" aria-disabled="true" onclick="return false;">✨ 其他功能（敬請期待）</a>
       </div>
       <div class="tip">歡迎收藏此頁面，最新的小工具都會集中於此。</div>
+    </div>
+
+    <div class="card info">
+      <h2>功能中文解釋</h2>
+      <p>「身高查詢」工具可解析遊戲中的 QRcode 網址，快速換算角色身高。頁面提供：</p>
+      <ul>
+        <li>單筆解析：貼上含有 <code>o=</code> 參數的網址或 Token，即可取得 height、scale 與身高。</li>
+        <li>批次解析：一次輸入多條網址，系統會列表顯示每筆結果與錯誤訊息。</li>
+        <li>除錯片段：自動擷取 height、scale 鄰近內容，方便確認原始資料。</li>
+        <li>操作教學：圖文解說 QRcode 掃描與貼上步驟，並支援點擊預覽截圖。</li>
+      </ul>
+      <p>若未來新增其他工具，會在此主畫面集中管理與說明。</p>
     </div>
   </main>
   <footer>
