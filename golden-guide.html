@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>找小金人攻略 | 光遇小工具中心</title>
+  <style>
+    :root {
+      --brand-1:#6fa8dc; --brand-2:#3d85c6;
+      --bg-1:#a1c4fd; --bg-2:#c2e9fb;
+      --glass: rgba(255,255,255,0.9);
+      --text:#333; --muted:#555;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+      background:linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
+      color:var(--text);line-height:1.6;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    header{padding:24px 16px 12px;text-align:center;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25);} 
+    header h1{margin:0;font-size:28px;}
+    header p{margin:8px 0 0;font-size:15px;opacity:.95;}
+    nav{display:flex;justify-content:center;margin-top:12px;}
+    nav a{color:#fff;text-decoration:none;font-weight:600;background:rgba(0,0,0,.25);padding:8px 14px;border-radius:999px;transition:.2s;}
+    nav a:hover{background:rgba(0,0,0,.35);} 
+    main{max-width:1100px;width:100%;margin:0 auto 40px;padding:0 18px;flex:1;}
+    .card{background:var(--glass);border-radius:20px;padding:24px;margin:20px auto;box-shadow:0 12px 30px rgba(0,0,0,.18);} 
+    .card h2{margin:0 0 12px;color:var(--brand-2);text-align:center;font-size:24px;}
+    .card p{margin:0 0 12px;color:var(--muted);text-align:center;}
+    .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+    .guide-card{background:rgba(255,255,255,.92);border-radius:16px;padding:18px;box-shadow:0 8px 22px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:stretch;}
+    .guide-card h3{margin:0 0 12px;font-size:20px;color:var(--brand-2);text-align:center;}
+    .guide-card p{margin:0 0 12px;color:var(--muted);font-size:14px;text-align:center;}
+    .guide-card video,
+    .guide-card iframe{width:100%;border:none;border-radius:12px;background:#000;min-height:180px;}
+    .note{margin-top:16px;font-size:13px;color:#37537a;text-align:center;}
+    footer{background:rgba(30,60,120,.9);padding:18px;text-align:center;color:#fff;font-size:14px;}
+    footer b{color:#ffd966;}
+    @media (min-width:1200px){
+      .guide-card video,
+      .guide-card iframe{min-height:200px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>找小金人攻略</h1>
+    <p>依地圖分類的六支攻略影片，協助快速補齊小金人與翼能量。</p>
+    <nav>
+      <a href="index.html">← 返回主畫面</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>使用說明</h2>
+      <p>點擊想查看的地圖即可播放影片，建議於 Wi-Fi 環境下觀看。若影片無法播放，請確認是否使用支援 HTML5 影片播放的瀏覽器（如 Chrome、Firefox、Edge 或 Safari）。</p>
+    </section>
+    <section class="guide-grid">
+      <article class="guide-card">
+        <h3>晨島</h3>
+        <p>帶你從出發到遇見第一隻小金人的完整路線。</p>
+        <video controls preload="metadata">
+          <source src="videos/isle-of-dawn.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/isle-of-dawn.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+      <article class="guide-card">
+        <h3>雲野</h3>
+        <p>介紹雲海上與隱藏洞穴中的小金人位置與路徑。</p>
+        <video controls preload="metadata">
+          <source src="videos/daylight-prairie.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/daylight-prairie.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+      <article class="guide-card">
+        <h3>雨林</h3>
+        <p>穿越雨林關卡時的小金人收集順序與躲雨技巧。</p>
+        <video controls preload="metadata">
+          <source src="videos/hidden-forest.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/hidden-forest.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+      <article class="guide-card">
+        <h3>霞谷</h3>
+        <p>利用滑行與風場快速收集賽道沿途的小金人。</p>
+        <video controls preload="metadata">
+          <source src="videos/valley-of-triumph.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/valley-of-triumph.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+      <article class="guide-card">
+        <h3>暮土</h3>
+        <p>避開黑暗巨獸的巡邏路線，安全取得藏在角落的小金人。</p>
+        <video controls preload="metadata">
+          <source src="videos/golden-wasteland.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/golden-wasteland.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+      <article class="guide-card">
+        <h3>禁閣</h3>
+        <p>逐層探索禁閣，整理隱藏房間與黑暗角落的小金人位置。</p>
+        <video controls preload="metadata">
+          <source src="videos/vault-of-knowledge.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放，請<a href="videos/vault-of-knowledge.mp4">下載影片</a>觀看。
+        </video>
+      </article>
+    </section>
+  </main>
+  <footer>
+    <div>製作者：<b>言陌</b></div>
+    <div>本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+  </footer>
+</body>
+</html>
