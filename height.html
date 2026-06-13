@@ -61,6 +61,8 @@
     footer{background:rgba(30,60,120,.9);padding:16px;margin-top:20px;}
     .footer-inner{text-align:center;color:#fff;font-size:14px;line-height:1.8;}
     .footer-inner b{color:#ffd966;}
+    .footer-inner a{color:#fff;text-decoration:none;font-weight:700;border-bottom:1px solid rgba(255,255,255,.65);}
+    .footer-inner a:hover{color:#ffd966;border-bottom-color:#ffd966;}
     #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
     .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
     .guide {max-width:980px;margin:14px auto;text-align:center;}
@@ -95,7 +97,7 @@
       <p data-i18n-html="introBody">這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：</p>
       <ul>
         <li data-i18n="introStep1">先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。</li>
-        <li data-i18n="introStep2">若結果異常，請至 DC 群尋求管理員協助處理。</li>
+        <li data-i18n-html="introStep2">若結果異常，請至 <a href="https://discord.gg/MWJ3z2HMRY" target="_blank" rel="noopener">DC 群</a>尋求管理員協助處理。</li>
         <li data-i18n="introStep3">需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。</li>
         <li data-i18n="introStep4">下方的使用教學提供截圖引導，點擊圖片即可放大檢視。</li>
       </ul>
@@ -156,6 +158,7 @@
       <div class="footer-inner">
         <div id="counter" data-i18n="counterLoading">累積使用次數：載入中...</div>
         <div><span data-i18n="author">製作者：</span><b>言陌</b></div>
+        <div><a href="https://discord.gg/MWJ3z2HMRY" target="_blank" rel="noopener" data-i18n="discordLink">加入 DC 群</a></div>
         <div class="disclaimer" data-i18n="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
       </div>
     </footer>
@@ -171,7 +174,7 @@ const I18N = {
     introTitle: "工具中文解釋",
     introBody: "這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：",
     introStep1: "先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。",
-    introStep2: "若結果異常，請至 DC 群尋求管理員協助處理。",
+    introStep2: "若結果異常，請至 <a href=\"https://discord.gg/MWJ3z2HMRY\" target=\"_blank\" rel=\"noopener\">DC 群</a>尋求管理員協助處理。",
     introStep3: "需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。",
     introStep4: "下方的使用教學提供截圖引導，點擊圖片即可放大檢視。",
     guideTitle: "使用教學",
@@ -196,6 +199,7 @@ const I18N = {
     counterLocal: "累積使用次數（本機）：",
     counterUnavailable: "累積使用次數：暫時無法取得",
     author: "製作者：",
+    discordLink: "加入 DC 群",
     disclaimer: "本工具與 thatgamecompany 無關，僅供玩家交流與學習使用",
     missingHeight: "(未抓到 height 片段)",
     missingScale: "(未抓到 scale 片段)",
@@ -219,7 +223,7 @@ const I18N = {
     introTitle: "Tool Overview",
     introBody: "This page reads the <code>o</code> parameter from a QR code URL and converts it into an estimated character height. Suggested flow:",
     introStep1: "Paste a URL into the single-link field, then press Parse to get height, scale, and estimated height.",
-    introStep2: "If the result looks wrong, ask an admin in the Discord group for help.",
+    introStep2: "If the result looks wrong, ask an admin in the <a href=\"https://discord.gg/MWJ3z2HMRY\" target=\"_blank\" rel=\"noopener\">Discord group</a> for help.",
     introStep3: "For multiple players, use the multi-link field to parse each URL into a table.",
     introStep4: "The guide below shows screenshots. Click an image to preview it.",
     guideTitle: "Guide",
@@ -244,6 +248,7 @@ const I18N = {
     counterLocal: "Total uses (local): ",
     counterUnavailable: "Total uses: unavailable",
     author: "Created by: ",
+    discordLink: "Join Discord",
     disclaimer: "This tool is not affiliated with thatgamecompany. It is for player sharing and learning only.",
     missingHeight: "(height snippet not found)",
     missingScale: "(scale snippet not found)",
