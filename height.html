@@ -24,9 +24,11 @@
       background:linear-gradient(160deg,var(--bg-1) 0%,var(--bg-2) 100%);
       color:var(--text);line-height:1.6;
     }
-    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;max-width:1000px;margin:0 auto;}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 8px;max-width:1000px;margin:0 auto;}
     header h1{margin:0;font-size:26px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;}
     header h1 img{height:30px;}
+    .header-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+    .lang-select{width:auto;margin:0;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);font-weight:700;color:#345;box-shadow:0 2px 8px rgba(0,0,0,.08);}
     header a.back{color:#fff;text-decoration:none;font-weight:600;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(6px);transition:.2s;}
     header a.back:hover{background:rgba(255,255,255,.28);}
     main{max-width:1000px;margin:0 auto 40px;padding:0 14px;}
@@ -67,63 +69,73 @@
     .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);cursor:pointer;}
     .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
     .step figcaption {font-size:14px;margin-top:8px;color:#444;}
+    @media (max-width:640px){
+      header{align-items:flex-start;flex-direction:column;}
+      .header-tools{width:100%;justify-content:space-between;}
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1><img src="logo.jpeg" alt="logo">光遇身高查詢</h1>
-    <a class="back" href="index.html">← 返回主畫面</a>
+    <h1><img src="logo.jpeg" alt="logo"><span data-i18n="appTitle">光遇身高查詢</span></h1>
+    <div class="header-tools">
+      <select id="langSelect" class="lang-select" aria-label="Language">
+        <option value="zh-Hant">繁中</option>
+        <option value="en">English</option>
+      </select>
+      <a class="back" href="index.html" data-i18n="back">← 返回主畫面</a>
+    </div>
   </header>
 
   <main>
-    <p class="sub">Base64Url 解碼 + height/scale 解析</p>
+    <p class="sub" data-i18n="subtitle">Base64Url 解碼 + height/scale 解析</p>
 
     <section class="card intro">
-      <h2>工具中文解釋</h2>
-      <p>這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：</p>
+      <h2 data-i18n="introTitle">工具中文解釋</h2>
+      <p data-i18n-html="introBody">這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：</p>
       <ul>
-        <li>先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。</li>
-        <li>若結果異常，請至 DC 群尋求管理員協助處理。</li>
-        <li>需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。</li>
-        <li>下方的使用教學提供截圖引導，點擊圖片即可放大檢視。</li>
+        <li data-i18n="introStep1">先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。</li>
+        <li data-i18n="introStep2">若結果異常，請至 DC 群尋求管理員協助處理。</li>
+        <li data-i18n="introStep3">需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。</li>
+        <li data-i18n="introStep4">下方的使用教學提供截圖引導，點擊圖片即可放大檢視。</li>
       </ul>
     </section>
 
     <section class="guide">
-      <h3>使用教學</h3>
+      <h3 data-i18n="guideTitle">使用教學</h3>
       <div class="guide-grid">
         <figure class="step" onclick="openPreview(this)">
-          <img src="IMG_3171.jpeg" alt="步驟1">
-          <figcaption>步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+          <img src="IMG_3171.jpeg" alt="步驟1" data-i18n-attr="alt:step1Alt">
+          <figcaption data-i18n="guideStep1">步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
         </figure>
-        <div class="step"><figcaption>步驟2：掃描 QRcode，複製網址</figcaption></div>
-        <div class="step"><figcaption>步驟3：貼到下方輸入框，點「解析」</figcaption></div>
+        <div class="step"><figcaption data-i18n="guideStep2">步驟2：掃描 QRcode，複製網址</figcaption></div>
+        <div class="step"><figcaption data-i18n="guideStep3">步驟3：貼到下方輸入框，點「解析」</figcaption></div>
       </div>
     </section>
 
     <div class="card">
-      <label for="single">單一連結</label>
-      <input id="single" placeholder="貼上網址 / o=... / token" class="mono" autocomplete="off" spellcheck="false">
+      <label for="single" data-i18n="singleLabel">單一連結</label>
+      <input id="single" placeholder="貼上網址 / o=... / token" data-i18n-attr="placeholder:inputPlaceholder" class="mono" autocomplete="off" spellcheck="false">
       <div class="row">
-        <button class="primary" onclick="runSingle()">解析</button>
-        <button class="secondary" onclick="clearSingle()">清除</button>
+        <button class="primary" onclick="runSingle()" data-i18n="parse">解析</button>
+        <button class="secondary" onclick="clearSingle()" data-i18n="clear">清除</button>
       </div>
       <div id="singleOut"></div>
 
       <details class="debug">
-        <summary>🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
-        <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;">若偵測不到，會顯示前 600 字的通用片段。</div>
+        <summary data-i18n="debugSummary">🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）</summary>
+        <div class="mono" style="font-size:13px;color:#666;margin-bottom:6px;" data-i18n="debugHint">若偵測不到，會顯示前 600 字的通用片段。</div>
         <div style="display:grid;gap:8px">
           <div>
-            <b>height 片段：</b>
+            <b data-i18n="heightSnippet">height 片段：</b>
             <pre id="ctxHeight" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
           </div>
           <div>
-            <b>scale 片段：</b>
+            <b data-i18n="scaleSnippet">scale 片段：</b>
             <pre id="ctxScale" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;"></pre>
           </div>
           <div>
-            <b>通用片段（fallback）：</b>
+            <b data-i18n="fallbackSnippet">通用片段（fallback）：</b>
             <pre id="rawSnippet" class="mono" style="white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
           </div>
         </div>
@@ -131,25 +143,154 @@
     </div>
 
     <div class="card">
-      <label for="batch">多條連結（每行一條）</label>
-      <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" class="mono"></textarea>
+      <label for="batch" data-i18n="batchLabel">多條連結（每行一條）</label>
+      <textarea id="batch" rows="6" placeholder="每行貼一條網址 / o=... / token" data-i18n-attr="placeholder:batchPlaceholder" class="mono"></textarea>
       <div class="tools">
-        <button class="primary" onclick="runBatch()">批次解析</button>
-        <button class="secondary" onclick="clearBatch()">清除</button>
+        <button class="primary" onclick="runBatch()" data-i18n="parseBatch">批次解析</button>
+        <button class="secondary" onclick="clearBatch()" data-i18n="clear">清除</button>
       </div>
       <div id="batchOut"></div>
     </div>
 
     <footer>
       <div class="footer-inner">
-        <div id="counter">累積使用次數：載入中...</div>
-        <div>製作者：<b>言陌</b></div>
-        <div class="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
+        <div id="counter" data-i18n="counterLoading">累積使用次數：載入中...</div>
+        <div><span data-i18n="author">製作者：</span><b>言陌</b></div>
+        <div class="disclaimer" data-i18n="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
       </div>
     </footer>
   </main>
 
   <script>
+const I18N = {
+  "zh-Hant": {
+    appTitle: "光遇身高查詢",
+    pageTitle: "光遇身高查詢",
+    back: "← 返回主畫面",
+    subtitle: "Base64Url 解碼 + height/scale 解析",
+    introTitle: "工具中文解釋",
+    introBody: "這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：",
+    introStep1: "先在「單一連結」輸入框貼上網址，按「解析」獲得 height、scale 與預估身高。",
+    introStep2: "若結果異常，請至 DC 群尋求管理員協助處理。",
+    introStep3: "需要處理多位玩家資料時，可使用「多條連結」批次輸入，自動整理成表格。",
+    introStep4: "下方的使用教學提供截圖引導，點擊圖片即可放大檢視。",
+    guideTitle: "使用教學",
+    step1Alt: "步驟1",
+    guideStep1: "步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode",
+    guideStep2: "步驟2：掃描 QRcode，複製網址",
+    guideStep3: "步驟3：貼到下方輸入框，點「解析」",
+    singleLabel: "單一連結",
+    inputPlaceholder: "貼上網址 / o=... / token",
+    parse: "解析",
+    clear: "清除",
+    debugSummary: "🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）",
+    debugHint: "若偵測不到，會顯示前 600 字的通用片段。",
+    heightSnippet: "height 片段：",
+    scaleSnippet: "scale 片段：",
+    fallbackSnippet: "通用片段（fallback）：",
+    batchLabel: "多條連結（每行一條）",
+    batchPlaceholder: "每行貼一條網址 / o=... / token",
+    parseBatch: "批次解析",
+    counterLoading: "累積使用次數：載入中...",
+    counterTotal: "累積使用次數：",
+    counterLocal: "累積使用次數（本機）：",
+    counterUnavailable: "累積使用次數：暫時無法取得",
+    author: "製作者：",
+    disclaimer: "本工具與 thatgamecompany 無關，僅供玩家交流與學習使用",
+    missingHeight: "(未抓到 height 片段)",
+    missingScale: "(未抓到 scale 片段)",
+    emptyToken: "空的 token",
+    base64Failed: "base64 解碼失敗",
+    missingToken: "找不到 o 參數",
+    missingPayload: "找不到 JSON 或 height/scale，片段: ",
+    resultHeight: "身高",
+    maxHeight: "最高(h=2)",
+    minHeight: "最低(h=-2)",
+    elapsed: "耗時",
+    error: "錯誤",
+    link: "連結",
+    status: "狀態"
+  },
+  en: {
+    appTitle: "Sky Height Checker",
+    pageTitle: "Sky Height Checker",
+    back: "← Back to home",
+    subtitle: "Base64Url decoding + height/scale parsing",
+    introTitle: "Tool Overview",
+    introBody: "This page reads the <code>o</code> parameter from a QR code URL and converts it into an estimated character height. Suggested flow:",
+    introStep1: "Paste a URL into the single-link field, then press Parse to get height, scale, and estimated height.",
+    introStep2: "If the result looks wrong, ask an admin in the Discord group for help.",
+    introStep3: "For multiple players, use the multi-link field to parse each URL into a table.",
+    introStep4: "The guide below shows screenshots. Click an image to preview it.",
+    guideTitle: "Guide",
+    step1Alt: "Step 1",
+    guideStep1: "Step 1: Open the game → Account info → Show QR code",
+    guideStep2: "Step 2: Scan the QR code and copy the URL",
+    guideStep3: "Step 3: Paste it below and click Parse",
+    singleLabel: "Single link",
+    inputPlaceholder: "Paste URL / o=... / token",
+    parse: "Parse",
+    clear: "Clear",
+    debugSummary: "🔧 Debug area (nearby height / scale snippets, safely escaped)",
+    debugHint: "If nothing is detected, the first 600 characters are shown as a fallback snippet.",
+    heightSnippet: "height snippet:",
+    scaleSnippet: "scale snippet:",
+    fallbackSnippet: "General snippet (fallback):",
+    batchLabel: "Multiple links (one per line)",
+    batchPlaceholder: "Paste one URL / o=... / token per line",
+    parseBatch: "Parse batch",
+    counterLoading: "Total uses: loading...",
+    counterTotal: "Total uses: ",
+    counterLocal: "Total uses (local): ",
+    counterUnavailable: "Total uses: unavailable",
+    author: "Created by: ",
+    disclaimer: "This tool is not affiliated with thatgamecompany. It is for player sharing and learning only.",
+    missingHeight: "(height snippet not found)",
+    missingScale: "(scale snippet not found)",
+    emptyToken: "Empty token",
+    base64Failed: "base64 decode failed",
+    missingToken: "Could not find the o parameter",
+    missingPayload: "Could not find JSON or height/scale, snippet: ",
+    resultHeight: "Estimated height",
+    maxHeight: "Highest (h=2)",
+    minHeight: "Lowest (h=-2)",
+    elapsed: "Elapsed",
+    error: "Error",
+    link: "Link",
+    status: "Status"
+  }
+};
+
+let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
+let counterMode = "loading";
+let counterValue = "";
+function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
+function renderCounter(){
+  const el = document.getElementById("counter");
+  if (!el) return;
+  if (counterMode === "remote") el.textContent = tr("counterTotal") + counterValue;
+  else if (counterMode === "local") el.textContent = tr("counterLocal") + counterValue;
+  else if (counterMode === "unavailable") el.textContent = tr("counterUnavailable");
+  else el.textContent = tr("counterLoading");
+}
+function applyLanguage(lang){
+  currentLang = I18N[lang] ? lang : "zh-Hant";
+  localStorage.setItem("heightLang", currentLang);
+  document.documentElement.lang = currentLang;
+  document.title = tr("pageTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = tr(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = tr(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-attr]").forEach(el => {
+    el.dataset.i18nAttr.split(",").forEach(pair => {
+      const [attr,key] = pair.split(":").map(s => s.trim());
+      if (attr && key) el.setAttribute(attr, tr(key));
+    });
+  });
+  const select = document.getElementById("langSelect");
+  if (select) select.value = currentLang;
+  renderCounter();
+}
+
 function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
@@ -175,10 +316,10 @@ function extractOToken(input){
   }catch{}
   const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_~A-Za-z0-9]+)/i); if(m) return m[1];
   if(/^[-_~A-Za-z0-9]+$/.test(s)) return s;
-  throw new Error("找不到 o 參數");
+  throw new Error(tr("missingToken"));
 }
 function b64urlToText(token){
-  if(!token) throw new Error('空的 token');
+  if(!token) throw new Error(tr("emptyToken"));
   try{token=decodeURIComponent(token);}catch{}
   let b64=token.replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
   try{ return atob(b64); }catch(e){}
@@ -191,7 +332,7 @@ function b64urlToText(token){
     const bin=atob(b64);let cleaned='';
     for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}
     return cleaned;
-  }catch(e){throw new Error('base64 解碼失敗');}
+  }catch(e){throw new Error(tr("base64Failed"));}
 }
 
 function scanJsonBlocks(text){
@@ -286,8 +427,8 @@ function parseHeightScaleFromUrl(input){
   const rawEl = document.getElementById('rawSnippet');
   const hEl   = document.getElementById('ctxHeight');
   const sEl   = document.getElementById('ctxScale');
-  if (hEl)   hEl.textContent   = ctxH || '(未抓到 height 片段)';
-  if (sEl)   sEl.textContent   = ctxS || '(未抓到 scale 片段)';
+  if (hEl)   hEl.textContent   = ctxH || tr("missingHeight");
+  if (sEl)   sEl.textContent   = ctxS || tr("missingScale");
   if (rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
 
   let h = grabHeightFromText(decoded);
@@ -315,7 +456,7 @@ function parseHeightScaleFromUrl(input){
     } catch {}
   }
 
-  throw new Error('找不到 JSON 或 height/scale，片段: ' + clean.slice(0, 600));
+  throw new Error(tr("missingPayload") + clean.slice(0, 600));
 }
 
 function runSingle(){
@@ -329,13 +470,13 @@ function runSingle(){
     out.innerHTML=`<table>
       <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
       <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
-      <tr><th>身高</th><td class="mono">${fmt(val)}</td></tr>
-      <tr><th>最高(h=2)</th><td class="mono">${fmt(hi)}</td></tr>
-      <tr><th>最低(h=-2)</th><td class="mono">${fmt(lo)}</td></tr>
-      <tr><th>耗時</th><td>${ms} ms</td></tr>
+      <tr><th>${tr("resultHeight")}</th><td class="mono">${fmt(val)}</td></tr>
+      <tr><th>${tr("maxHeight")}</th><td class="mono">${fmt(hi)}</td></tr>
+      <tr><th>${tr("minHeight")}</th><td class="mono">${fmt(lo)}</td></tr>
+      <tr><th>${tr("elapsed")}</th><td>${ms} ms</td></tr>
     </table>`;
   }catch(e){
-    out.innerHTML = `<div class="badge err">錯誤</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
+    out.innerHTML = `<div class="badge err">${tr("error")}</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
   }
 }
 function clearSingle(){
@@ -351,7 +492,7 @@ function runBatch(){
   const out=document.getElementById('batchOut'); out.innerHTML='';
   if(!txt) return;
   const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  let html='<table><thead><tr><th>#</th><th>連結</th><th>height</th><th>scale</th><th>身高</th><th>狀態</th></tr></thead><tbody>';
+  let html=`<table><thead><tr><th>#</th><th>${tr("link")}</th><th>height</th><th>scale</th><th>${tr("resultHeight")}</th><th>${tr("status")}</th></tr></thead><tbody>`;
   lines.forEach((link,i)=>{
     try{
       const r=parseHeightScaleFromUrl(link);
@@ -369,7 +510,7 @@ function runBatch(){
         <td>${i+1}</td>
         <td class="mono" style="max-width:320px;overflow-wrap:anywhere;">${escapeHtml(link)}</td>
         <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
-        <td><span class="badge err" title="${escapeHtml(e.message||String(e))}">錯誤</span></td>
+        <td><span class="badge err" title="${escapeHtml(e.message||String(e))}">${tr("error")}</span></td>
       </tr>`;
     }
   });
@@ -390,21 +531,31 @@ function openPreview(fig){
 }
 
 (function () {
-  const el = document.getElementById('counter');
+  applyLanguage(currentLang);
+  const langSelect = document.getElementById("langSelect");
+  if (langSelect) langSelect.addEventListener("change", e => applyLanguage(e.target.value));
+
   const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
   const KEY = 'local-visit-count';
   const tickLocal = () => {
     try {
       const v = (parseInt(localStorage.getItem(KEY) || '0', 10) + 1);
       localStorage.setItem(KEY, v);
-      el.textContent = '累積使用次數（本機）：' + v;
+      counterMode = "local";
+      counterValue = v;
+      renderCounter();
     } catch (e) {
-      el.textContent = '累積使用次數：暫時無法取得';
+      counterMode = "unavailable";
+      renderCounter();
     }
   };
   fetch(COUNTER_URL, { cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(d => { el.textContent = '累積使用次數：' + d.value; })
+    .then(d => {
+      counterMode = "remote";
+      counterValue = d.value;
+      renderCounter();
+    })
     .catch(err => { console.log('counter error:', err); tickLocal(); });
 })();
 
