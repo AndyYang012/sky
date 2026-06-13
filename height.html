@@ -167,20 +167,20 @@ function around(text, re, radius=180){
 
 function extractOToken(input){
   let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
-  const head=s.match(/^o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(head) return head[1];
+  const head=s.match(/^o(?:=|＝|%3D)([-_~A-Za-z0-9]+)/i); if(head) return head[1];
   try{
     const u=new URL(s);
     const q=u.searchParams.get("o"); if(q) return q;
     const mPath=u.pathname.match(/\/o(?:=|＝|%3D)([^/?#]+)/i); if(mPath) return mPath[1];
   }catch{}
-  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_A-Za-z0-9]+)/i); if(m) return m[1];
-  if(/^[-_A-Za-z0-9]+$/.test(s)) return s;
+  const m=s.match(/(?:^|[?&/])o(?:=|＝|%3D)([-_~A-Za-z0-9]+)/i); if(m) return m[1];
+  if(/^[-_~A-Za-z0-9]+$/.test(s)) return s;
   throw new Error("找不到 o 參數");
 }
 function b64urlToText(token){
   if(!token) throw new Error('空的 token');
   try{token=decodeURIComponent(token);}catch{}
-  let b64=token.replace(/-/g,'+').replace(/_/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
+  let b64=token.replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
   try{ return atob(b64); }catch(e){}
   try{
     const bin=atob(b64),bytes=new Uint8Array(bin.length);
@@ -209,9 +209,26 @@ function scanJsonBlocks(text){
 function findHeightScale(obj){
   if(obj&&typeof obj==="object"){
     if("height" in obj && "scale" in obj) return {height:obj.height,scale:obj.scale};
+    if("(" in obj && "s" in obj) {
+      const height = Number(obj["("]);
+      const scale = Number(obj.s);
+      if (!Number.isNaN(height) && !Number.isNaN(scale) && Math.abs(scale) <= 10) {
+        return {height, scale};
+      }
+    }
     for(const k in obj){try{const r=findHeightScale(obj[k]); if(r) return r;}catch{}}
   }
   return null;
+}
+
+function grabPackedHeightScale(s){
+  s = vis(s);
+  const m = s.match(/\("?\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))/);
+  if (!m) return null;
+  const height = Number(m[1]);
+  const scale = Number(m[2]);
+  if (Number.isNaN(height) || Number.isNaN(scale) || Math.abs(scale) > 10) return null;
+  return {height, scale};
 }
 
 function grabHeightFromText(s){
@@ -279,6 +296,9 @@ function parseHeightScaleFromUrl(input){
     h = grabHeightNearScale(decoded);
   }
   if (h != null && s != null) return { height: h, scale: s };
+
+  const packed = grabPackedHeightScale(decoded);
+  if (packed) return packed;
 
   const blocks = scanJsonBlocks(decoded);
   for (const js of blocks) {
