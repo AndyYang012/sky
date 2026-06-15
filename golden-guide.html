@@ -61,7 +61,7 @@
       <h2>使用說明</h2>
       <p>點擊想查看的地圖即可播放影片，建議於 Wi-Fi 環境下觀看。若影片無法播放，請確認是否使用支援 HTML5 影片播放的瀏覽器（如 Chrome、Firefox、Edge 或 Safari）。</p>
       <div class="upload-note">
-        影片檔請放在 <code>videos/</code> 資料夾，檔名需和頁面設定完全一致。建議使用小寫英文、數字與連字號，例如 <code>videos/isle-of-dawn-01.mp4</code>，避免空白、中文、全形符號與大小寫混用。
+        可使用 YouTube 連結或自行上傳 MP4。MP4 請放在 <code>videos/</code> 資料夾，檔名需和頁面設定完全一致。建議使用小寫英文、數字與連字號，例如 <code>videos/isle-of-dawn-01.mp4</code>，避免空白、中文、全形符號與大小寫混用。
       </div>
     </section>
     <section id="guideGrid" class="guide-grid" aria-live="polite"></section>
@@ -73,9 +73,9 @@
   <script>
 const GUIDE_VIDEOS = [
   {
-    title: "晨島",
-    description: "帶你從出發到遇見第一隻小金人的完整路線。",
-    file: "videos/isle-of-dawn.mp4"
+    title: "晨島與試煉",
+    description: "小金人路線。之後會再補一支正常過試煉的路線。",
+    youtube: "https://www.youtube.com/embed/muyj1nWpqgU"
   },
   {
     title: "雲野",
@@ -114,14 +114,16 @@ function renderGuides(){
   grid.innerHTML = GUIDE_VIDEOS.map(video => {
     const title = escapeHtml(video.title);
     const description = escapeHtml(video.description);
-    const file = escapeHtml(video.file);
+    const media = video.youtube
+      ? `<iframe src="${escapeHtml(video.youtube)}" title="${title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`
+      : `<video controls preload="metadata">
+        <source src="${escapeHtml(video.file)}" type="video/mp4">
+        您的瀏覽器不支援影片播放，請<a href="${escapeHtml(video.file)}">下載影片</a>觀看。
+      </video>`;
     return `<article class="guide-card">
       <h3>${title}</h3>
       <p>${description}</p>
-      <video controls preload="metadata">
-        <source src="${file}" type="video/mp4">
-        您的瀏覽器不支援影片播放，請<a href="${file}">下載影片</a>觀看。
-      </video>
+      ${media}
     </article>`;
   }).join("");
 }
