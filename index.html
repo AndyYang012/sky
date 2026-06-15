@@ -75,11 +75,14 @@
 
     <div class="card info">
       <h2 data-i18n="infoTitle">功能中文解釋</h2>
-      <p data-i18n="heightIntro">「身高查詢」主要幫助旅人：</p>
+      <p data-i18n-html="heightIntro"><b>身高查詢</b>主要幫助旅人：</p>
       <ul>
         <li data-i18n="heightPoint1">快速了解自己或朋友角色的實際身高。</li>
         <li data-i18n="heightPoint2">整理不同帳號的身高差異，方便製作對照表。</li>
+        <li data-i18n="heightPoint3">支援貼上 QR code 網址或 token，自動解析 height、scale 與預估身高。</li>
       </ul>
+      <p data-i18n-html="goldenIntro"><b>小金人攻略</b>會用影片整理各地圖與試煉路線，方便補翼能量。目前仍在整理中，會陸續更新。</p>
+      <p data-i18n-html="communityIntro"><b>語言與社群</b>：網站支援繁中 / English 切換，並提供 Discord 群連結，方便回報問題、提供資料或交流使用心得。</p>
       <p data-i18n="futureNote">若未來新增其他工具，會在此主畫面集中管理與說明。</p>
     </div>
   </main>
@@ -100,9 +103,12 @@ const I18N = {
     comingSoon: "📦 其他功能（敬請期待）",
     tip: "歡迎收藏此頁面，最新的小工具都會集中於此。",
     infoTitle: "功能中文解釋",
-    heightIntro: "「身高查詢」主要幫助旅人：",
+    heightIntro: "<b>身高查詢</b>主要幫助旅人：",
     heightPoint1: "快速了解自己或朋友角色的實際身高。",
     heightPoint2: "整理不同帳號的身高差異，方便製作對照表。",
+    heightPoint3: "支援貼上 QR code 網址或 token，自動解析 height、scale 與預估身高。",
+    goldenIntro: "<b>小金人攻略</b>會用影片整理各地圖與試煉路線，方便補翼能量。目前仍在整理中，會陸續更新。",
+    communityIntro: "<b>語言與社群</b>：網站支援繁中 / English 切換，並提供 Discord 群連結，方便回報問題、提供資料或交流使用心得。",
     futureNote: "若未來新增其他工具，會在此主畫面集中管理與說明。",
     author: "製作者：",
     discordLink: "加入 DC 群",
@@ -118,9 +124,12 @@ const I18N = {
     comingSoon: "📦 More features coming soon",
     tip: "Bookmark this page to keep the latest tools in one place.",
     infoTitle: "Feature Overview",
-    heightIntro: "The height checker helps Sky players:",
+    heightIntro: "<b>Height checker</b> helps Sky players:",
     heightPoint1: "Quickly understand their own or a friend's character height.",
     heightPoint2: "Compare height differences across accounts for reference tables.",
+    heightPoint3: "Paste a QR code URL or token to automatically parse height, scale, and estimated height.",
+    goldenIntro: "<b>Winged Light guide</b> organizes map and trial routes with videos so players can recover wing energy more easily. It is still in progress and will be updated over time.",
+    communityIntro: "<b>Language and community</b>: the site supports Traditional Chinese / English switching and includes a Discord link for bug reports, route contributions, and player discussion.",
     futureNote: "New tools will be managed and explained from this home screen.",
     author: "Created by: ",
     discordLink: "Join Discord",
@@ -136,6 +145,7 @@ function applyLanguage(lang){
   document.documentElement.lang = currentLang;
   document.title = tr("pageTitle");
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = tr(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = tr(el.dataset.i18nHtml); });
   const select = document.getElementById("langSelect");
   if (select) select.value = currentLang;
 }
