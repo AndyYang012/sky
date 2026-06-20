@@ -77,15 +77,30 @@
     .upload-card>p{margin:0;color:var(--muted);}
     .drop-zone{display:grid;place-items:center;gap:8px;margin-top:14px;padding:22px;border:2px dashed #8eb9df;border-radius:14px;background:#f7fbff;text-align:center;transition:.2s;}
     .drop-zone.dragover{border-color:var(--brand-2);background:#eaf5ff;}
+    .drop-zone:focus-visible{outline:3px solid rgba(61,133,198,.35);outline-offset:3px;}
     .file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
     .file-button{display:inline-block;padding:11px 18px;border-radius:10px;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;font-weight:700;cursor:pointer;}
     .upload-hint{font-size:13px;color:var(--muted);}
+    .upload-actions{display:none;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .upload-actions.visible{display:flex;}
+    .upload-actions .file-button{padding:9px 14px;background:#fff;color:#333;border:1px solid #bbb;font-weight:400;}
     .privacy-note{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:10px;background:#edf8ef;color:#315d38;font-size:13px;}
     .privacy-note strong{display:block;}
     .qr-preview{display:none;max-width:260px;max-height:260px;margin:14px auto 0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.16);}
     .upload-status{min-height:24px;margin-top:10px;font-weight:700;}
     .upload-status.success{color:var(--ok);}
     .upload-status.error{color:var(--err);}
+    .height-visual{margin-top:16px;padding:16px 14px 12px;border:1px solid #d9e8f5;border-radius:14px;background:linear-gradient(180deg,#f8fcff,#eef7ff);}
+    .height-visual-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:12px;}
+    .height-visual-head strong{color:var(--brand-2);}
+    .height-range-label{font-size:13px;color:var(--muted);}
+    .height-ruler{position:relative;height:62px;margin:0 10px;}
+    .height-track{position:absolute;left:0;right:0;top:20px;height:12px;border-radius:999px;background:linear-gradient(90deg,#b8d9f3,#3d85c6);}
+    .height-marker{position:absolute;top:10px;width:22px;height:32px;border:3px solid #fff;border-radius:11px;background:#173f6a;box-shadow:0 2px 8px rgba(0,0,0,.25);transform:translateX(-50%);}
+    .height-marker::after{content:"";position:absolute;left:50%;bottom:-9px;border:5px solid transparent;border-top-color:#173f6a;transform:translateX(-50%);}
+    .height-tick{position:absolute;top:36px;font-size:11px;color:#526679;transform:translateX(-50%);white-space:nowrap;}
+    .height-tick::before{content:"";position:absolute;left:50%;top:-16px;width:1px;height:8px;background:#fff;opacity:.9;}
+    .height-band{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:12px;color:#526679;}
     #singleOut,#batchOut{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     @media (max-width:640px){
       header{align-items:flex-start;flex-direction:column;}
@@ -98,6 +113,8 @@
       .step figcaption,.step p{grid-column:2;}
       .row{grid-template-columns:1fr;}
       button,.file-button{min-height:44px;width:100%;text-align:center;}
+      .upload-actions{display:none;grid-template-columns:1fr 1fr;}
+      .upload-actions.visible{display:grid;}
       .drop-zone{padding:18px 12px;}
       th,td{padding:8px;white-space:nowrap;}
       .debug{display:none;}
@@ -155,12 +172,16 @@
     <section class="card upload-card">
       <h2 data-i18n="uploadTitle">從 QR Code 截圖辨識</h2>
       <p data-i18n="uploadDescription">選擇含有 Sky QR Code 的 PNG、JPG 或 WebP 圖片。</p>
-      <div id="dropZone" class="drop-zone">
+      <div id="dropZone" class="drop-zone" tabindex="0">
         <input id="qrFile" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-describedby="privacyNote">
         <label class="file-button" for="qrFile" data-i18n="chooseImage">選擇 QR Code 截圖</label>
-        <span class="upload-hint" data-i18n="dropHint">或將圖片拖曳到這裡（最大 15 MB）</span>
+        <span class="upload-hint" data-i18n="dropHint">或拖曳、貼上剪貼簿圖片到這裡（最大 15 MB）</span>
       </div>
       <img id="qrPreview" class="qr-preview" alt="" data-i18n-attr="alt:previewAlt">
+      <div id="uploadActions" class="upload-actions">
+        <label class="file-button" for="qrFile" data-i18n="reselectImage">重新選擇</label>
+        <button class="secondary" type="button" id="clearImage" data-i18n="clearImage">一鍵清除</button>
+      </div>
       <div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div>
       <div id="privacyNote" class="privacy-note">
         <span aria-hidden="true">🔒</span>
@@ -245,13 +266,18 @@ const I18N = {
     uploadTitle: "從 QR Code 截圖辨識",
     uploadDescription: "選擇含有 Sky QR Code 的 PNG、JPG、WebP 或 GIF 圖片。",
     chooseImage: "選擇 QR Code 截圖",
-    dropHint: "或將圖片拖曳到這裡（最大 15 MB）",
+    dropHint: "或拖曳、貼上剪貼簿圖片到這裡（最大 15 MB）",
+    reselectImage: "重新選擇",
+    clearImage: "一鍵清除",
     previewAlt: "選取的 QR Code 截圖預覽",
     privacyTitle: "圖片不會上傳",
     privacyBody: "QR Code 只在你的瀏覽器與裝置記憶體中辨識；本頁不會把圖片傳送、儲存或分享至伺服器。",
     readingQr: "正在本機辨識 QR Code…",
     qrSuccess: "辨識成功，已自動填入並解析。",
-    qrNotFound: "圖片中找不到 QR Code。請確認 QR Code 完整、清晰且未被裁切。",
+    qrNotFound: "圖片中沒有偵測到 QR Code。請確認上傳的是包含 QR Code 的完整截圖。",
+    qrBlurry: "圖片可能過小、模糊或對比不足，無法辨識 QR Code。請改用清晰的原始截圖。",
+    qrNotSky: "已讀取 QR Code，但內容不是可用的 Sky 身高 QR Code。",
+    qrBadUrl: "已讀取 Sky QR Code，但網址或 o 參數內容錯誤。請在遊戲中重新產生 QR Code。",
     qrUnsupported: "目前的瀏覽器視窗未提供本機 QR Code 辨識功能。若從 Discord 開啟，請改在瀏覽器 App 中開啟；也可先掃描 QR Code，再將連結貼到下方解析。",
     invalidImage: "請選擇 PNG、JPG、WebP 或 GIF 圖片。",
     imageTooLarge: "圖片超過 15 MB，請先縮小圖片後再試。",
@@ -282,8 +308,13 @@ const I18N = {
     missingToken: "找不到 o 參數",
     missingPayload: "找不到 JSON 或 height/scale，片段: ",
     resultHeight: "身高",
-    maxHeight: "最高(h=2)",
-    minHeight: "最低(h=-2)",
+    heightPosition: "身高位置",
+    shortest: "較矮",
+    middle: "中間",
+    tallest: "較高",
+    range: "區間",
+    maxHeight: "h=2 對應值",
+    minHeight: "h=-2 對應值",
     elapsed: "耗時",
     error: "錯誤",
     link: "連結",
@@ -311,13 +342,18 @@ const I18N = {
     uploadTitle: "Recognize a QR code screenshot",
     uploadDescription: "Choose a PNG, JPG, WebP, or GIF image containing a Sky QR code.",
     chooseImage: "Choose QR code screenshot",
-    dropHint: "or drop an image here (15 MB maximum)",
+    dropHint: "or drop or paste a clipboard image here (15 MB maximum)",
+    reselectImage: "Choose another",
+    clearImage: "Clear all",
     previewAlt: "Preview of the selected QR code screenshot",
     privacyTitle: "Your image is not uploaded",
     privacyBody: "The QR code is recognized only in your browser and device memory. This page does not send, store, or share the image with a server.",
     readingQr: "Recognizing the QR code on this device…",
     qrSuccess: "QR code recognized and parsed automatically.",
-    qrNotFound: "No QR code was found. Make sure it is complete, sharp, and not cropped.",
+    qrNotFound: "No QR code was detected. Make sure the image contains the complete QR code.",
+    qrBlurry: "The image may be too small, blurry, or low-contrast to read. Try a clear original screenshot.",
+    qrNotSky: "A QR code was read, but it is not a usable Sky height QR code.",
+    qrBadUrl: "A Sky QR code was read, but its URL or o parameter is invalid. Generate a new QR code in the game.",
     qrUnsupported: "This browser window does not provide local QR code recognition. If you opened it from Discord, open it in your browser app instead, or scan the QR code first and paste its link below.",
     invalidImage: "Choose a PNG, JPG, WebP, or GIF image.",
     imageTooLarge: "The image is larger than 15 MB. Reduce its size and try again.",
@@ -348,8 +384,13 @@ const I18N = {
     missingToken: "Could not find the o parameter",
     missingPayload: "Could not find JSON or height/scale, snippet: ",
     resultHeight: "Estimated height",
-    maxHeight: "Highest (h=2)",
-    minHeight: "Lowest (h=-2)",
+    heightPosition: "Height position",
+    shortest: "Shorter",
+    middle: "Middle",
+    tallest: "Taller",
+    range: "Range",
+    maxHeight: "Value at h=2",
+    minHeight: "Value at h=-2",
     elapsed: "Elapsed",
     error: "Error",
     link: "Link",
@@ -556,6 +597,30 @@ function parseHeightScaleFromUrl(input){
   throw new Error(tr("missingPayload") + clean.slice(0, 600));
 }
 
+function renderHeightVisual(value, h2Value, hMinus2Value){
+  const min = Math.min(h2Value, hMinus2Value);
+  const max = Math.max(h2Value, hMinus2Value);
+  const span = max - min;
+  const position = span > 0 ? Math.max(0, Math.min(100, ((value - min) / span) * 100)) : 50;
+  const band = position < 33.333 ? tr("shortest") : position > 66.667 ? tr("tallest") : tr("middle");
+  const ticks = [0,25,50,75,100].map(percent => {
+    const tickValue = min + span * percent / 100;
+    return `<span class="height-tick" style="left:${percent}%">${tickValue.toFixed(2)}</span>`;
+  }).join("");
+  return `<section class="height-visual" aria-label="${tr("heightPosition")}">
+    <div class="height-visual-head">
+      <strong>${tr("heightPosition")}：${band}</strong>
+      <span class="height-range-label">${tr("range")} ${min.toFixed(2)}–${max.toFixed(2)}</span>
+    </div>
+    <div class="height-ruler">
+      <div class="height-track"></div>
+      <div class="height-marker" style="left:${position.toFixed(2)}%" title="${value.toFixed(4)}"></div>
+      ${ticks}
+    </div>
+    <div class="height-band"><span>${tr("shortest")}</span><span>${tr("middle")}</span><span>${tr("tallest")}</span></div>
+  </section>`;
+}
+
 function runSingle(){
   const url=document.getElementById('single').value.trim();
   const out=document.getElementById('singleOut'); out.innerHTML='';
@@ -571,7 +636,7 @@ function runSingle(){
       <tr><th>${tr("maxHeight")}</th><td class="mono">${fmt(hi)}</td></tr>
       <tr><th>${tr("minHeight")}</th><td class="mono">${fmt(lo)}</td></tr>
       <tr><th>${tr("elapsed")}</th><td>${ms} ms</td></tr>
-    </table>`;
+    </table>${renderHeightVisual(val,hi,lo)}`;
   }catch(e){
     out.innerHTML = `<div class="badge err">${tr("error")}</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
   }
@@ -622,6 +687,22 @@ function setUploadStatus(message, type=""){
   status.className = "upload-status" + (type ? " " + type : "");
 }
 
+function clearQrSelection(clearResult=false){
+  const input = document.getElementById("qrFile");
+  const preview = document.getElementById("qrPreview");
+  const actions = document.getElementById("uploadActions");
+  if (input) input.value = "";
+  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl = "";
+  if (preview) {
+    preview.removeAttribute("src");
+    preview.style.display = "none";
+  }
+  if (actions) actions.classList.remove("visible");
+  setUploadStatus("");
+  if (clearResult) clearSingle();
+}
+
 function loadImageFile(file){
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
@@ -636,6 +717,54 @@ function loadImageFile(file){
     };
     image.src = objectUrl;
   });
+}
+
+async function inspectImageQuality(file){
+  const image = await loadImageFile(file);
+  const sourceWidth = image.naturalWidth;
+  const sourceHeight = image.naturalHeight;
+  const sampleSize = 256;
+  const scale = Math.min(1, sampleSize / Math.max(sourceWidth, sourceHeight));
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", {willReadFrequently:true});
+  if (!context) return {likelyBlurry:false};
+  context.drawImage(image, 0, 0, width, height);
+  const data = context.getImageData(0, 0, width, height).data;
+  const gray = new Float32Array(width * height);
+  let sum = 0;
+  for (let i=0, p=0; i<data.length; i+=4, p++) {
+    const value = data[i] * .299 + data[i+1] * .587 + data[i+2] * .114;
+    gray[p] = value;
+    sum += value;
+  }
+  const mean = sum / gray.length;
+  let variance = 0;
+  let edgeSum = 0;
+  let edgeCount = 0;
+  for (let y=0; y<height; y++) {
+    for (let x=0; x<width; x++) {
+      const index = y * width + x;
+      const delta = gray[index] - mean;
+      variance += delta * delta;
+      if (x > 0) {
+        edgeSum += Math.abs(gray[index] - gray[index-1]);
+        edgeCount++;
+      }
+      if (y > 0) {
+        edgeSum += Math.abs(gray[index] - gray[index-width]);
+        edgeCount++;
+      }
+    }
+  }
+  const contrast = Math.sqrt(variance / gray.length);
+  const edgeStrength = edgeCount ? edgeSum / edgeCount : 0;
+  return {
+    likelyBlurry: Math.min(sourceWidth, sourceHeight) < 240 || contrast < 22 || edgeStrength < 4.5
+  };
 }
 
 async function detectQrWithBarcodeDetector(file){
@@ -693,6 +822,7 @@ async function recognizeQrImage(file){
   previewObjectUrl = URL.createObjectURL(file);
   preview.src = previewObjectUrl;
   preview.style.display = "block";
+  document.getElementById("uploadActions").classList.add("visible");
   setUploadStatus(tr("readingQr"));
 
   try {
@@ -710,7 +840,25 @@ async function recognizeQrImage(file){
       throw new Error("QR_UNSUPPORTED");
     }
     if (!rawValue) {
-      setUploadStatus(tr("qrNotFound"), "error");
+      const quality = await inspectImageQuality(file);
+      setUploadStatus(tr(quality.likelyBlurry ? "qrBlurry" : "qrNotFound"), "error");
+      return;
+    }
+    let isSkyQr = false;
+    try {
+      const url = new URL(rawValue);
+      isSkyQr = /^https?:$/.test(url.protocol) && Boolean(url.searchParams.get("o") || url.pathname.match(/\/o(?:=|＝|%3D)/i));
+    } catch {
+      isSkyQr = /^o(?:=|＝|%3D)/i.test(rawValue);
+    }
+    if (!isSkyQr) {
+      setUploadStatus(tr("qrNotSky"), "error");
+      return;
+    }
+    try {
+      parseHeightScaleFromUrl(rawValue);
+    } catch {
+      setUploadStatus(tr("qrBadUrl"), "error");
       return;
     }
     document.getElementById("single").value = rawValue;
@@ -728,7 +876,12 @@ async function recognizeQrImage(file){
   if (langSelect) langSelect.addEventListener("change", e => applyLanguage(e.target.value));
   const qrFile = document.getElementById("qrFile");
   const dropZone = document.getElementById("dropZone");
-  if (qrFile) qrFile.addEventListener("change", e => recognizeQrImage(e.target.files[0]));
+  const clearImage = document.getElementById("clearImage");
+  if (qrFile) {
+    qrFile.addEventListener("click", () => { qrFile.value = ""; });
+    qrFile.addEventListener("change", e => recognizeQrImage(e.target.files[0]));
+  }
+  if (clearImage) clearImage.addEventListener("click", () => clearQrSelection(true));
   if (dropZone) {
     ["dragenter","dragover"].forEach(type => dropZone.addEventListener(type, e => {
       e.preventDefault();
@@ -739,7 +892,20 @@ async function recognizeQrImage(file){
       dropZone.classList.remove("dragover");
     }));
     dropZone.addEventListener("drop", e => recognizeQrImage(e.dataTransfer.files[0]));
+    dropZone.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        qrFile.click();
+      }
+    });
   }
+  document.addEventListener("paste", e => {
+    const imageItem = Array.from(e.clipboardData && e.clipboardData.items || [])
+      .find(item => item.kind === "file" && item.type.startsWith("image/"));
+    if (!imageItem) return;
+    e.preventDefault();
+    recognizeQrImage(imageItem.getAsFile());
+  });
 
   const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
   const KEY = 'local-visit-count';
