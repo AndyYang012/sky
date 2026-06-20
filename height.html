@@ -67,13 +67,40 @@
     .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
     .guide {max-width:980px;margin:14px auto;text-align:center;}
     .guide h3 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
-    .guide-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:15px;}
-    .step {background:rgba(255,255,255,0.8);border-radius:12px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);cursor:pointer;}
+    .guide-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:15px;}
+    .step {background:rgba(255,255,255,0.88);border-radius:12px;padding:14px;margin:0;box-shadow:0 4px 12px rgba(0,0,0,0.05);text-align:left;}
+    .step-number{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--brand-2);color:#fff;font-weight:800;margin-bottom:8px;}
     .step img {width:100%;height:140px;object-fit:cover;border-radius:8px;}
-    .step figcaption {font-size:14px;margin-top:8px;color:#444;}
+    .step figcaption {font-size:14px;margin-top:8px;color:#444;font-weight:700;}
+    .step p{font-size:13px;color:var(--muted);margin:6px 0 0;}
+    .upload-card h2{margin:0 0 4px;color:var(--brand-2);}
+    .upload-card>p{margin:0;color:var(--muted);}
+    .drop-zone{display:grid;place-items:center;gap:8px;margin-top:14px;padding:22px;border:2px dashed #8eb9df;border-radius:14px;background:#f7fbff;text-align:center;transition:.2s;}
+    .drop-zone.dragover{border-color:var(--brand-2);background:#eaf5ff;}
+    .file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+    .file-button{display:inline-block;padding:11px 18px;border-radius:10px;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;font-weight:700;cursor:pointer;}
+    .upload-hint{font-size:13px;color:var(--muted);}
+    .privacy-note{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:10px;background:#edf8ef;color:#315d38;font-size:13px;}
+    .privacy-note strong{display:block;}
+    .qr-preview{display:none;max-width:260px;max-height:260px;margin:14px auto 0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.16);}
+    .upload-status{min-height:24px;margin-top:10px;font-weight:700;}
+    .upload-status.success{color:var(--ok);}
+    .upload-status.error{color:var(--err);}
+    #singleOut,#batchOut{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     @media (max-width:640px){
       header{align-items:flex-start;flex-direction:column;}
       .header-tools{width:100%;justify-content:space-between;}
+      main{padding:0 10px;margin-bottom:20px;}
+      .card{padding:14px;margin:10px auto;border-radius:14px;}
+      .guide-grid{grid-template-columns:1fr;gap:10px;}
+      .step{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:start;}
+      .step img{grid-column:1/-1;height:auto;max-height:220px;margin-top:4px;}
+      .step figcaption,.step p{grid-column:2;}
+      .row{grid-template-columns:1fr;}
+      button,.file-button{min-height:44px;width:100%;text-align:center;}
+      .drop-zone{padding:18px 12px;}
+      th,td{padding:8px;white-space:nowrap;}
+      .debug{display:none;}
     }
   </style>
 </head>
@@ -106,12 +133,41 @@
     <section class="guide">
       <h3 data-i18n="guideTitle">使用教學</h3>
       <div class="guide-grid">
-        <figure class="step" onclick="openPreview(this)">
+        <figure class="step">
+          <span class="step-number">1</span>
           <img src="IMG_3171.jpeg" alt="步驟1" data-i18n-attr="alt:step1Alt">
           <figcaption data-i18n="guideStep1">步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode</figcaption>
+          <p data-i18n="guideStep1Detail">將 QR Code 完整截圖，避免裁掉四周的白色邊界。</p>
         </figure>
-        <div class="step"><figcaption data-i18n="guideStep2">步驟2：掃描 QRcode，複製網址</figcaption></div>
-        <div class="step"><figcaption data-i18n="guideStep3">步驟3：貼到下方輸入框，點「解析」</figcaption></div>
+        <div class="step">
+          <span class="step-number">2</span>
+          <figcaption data-i18n="guideStep2">步驟2：選擇或拖曳 QR Code 截圖</figcaption>
+          <p data-i18n="guideStep2Detail">手機可直接從相簿選取；電腦也可把圖片拖進上傳區。</p>
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          <figcaption data-i18n="guideStep3">步驟3：等待本機辨識並查看結果</figcaption>
+          <p data-i18n="guideStep3Detail">辨識成功後會自動填入連結並解析 height、scale 與預估身高。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card upload-card">
+      <h2 data-i18n="uploadTitle">從 QR Code 截圖辨識</h2>
+      <p data-i18n="uploadDescription">選擇含有 Sky QR Code 的 PNG、JPG 或 WebP 圖片。</p>
+      <div id="dropZone" class="drop-zone">
+        <input id="qrFile" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-describedby="privacyNote">
+        <label class="file-button" for="qrFile" data-i18n="chooseImage">選擇 QR Code 截圖</label>
+        <span class="upload-hint" data-i18n="dropHint">或將圖片拖曳到這裡（最大 15 MB）</span>
+      </div>
+      <img id="qrPreview" class="qr-preview" alt="" data-i18n-attr="alt:previewAlt">
+      <div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div>
+      <div id="privacyNote" class="privacy-note">
+        <span aria-hidden="true">🔒</span>
+        <div>
+          <strong data-i18n="privacyTitle">圖片不會上傳</strong>
+          <span data-i18n="privacyBody">QR Code 只在你的瀏覽器與裝置記憶體中辨識；本頁不會把圖片傳送、儲存或分享至伺服器。</span>
+        </div>
       </div>
     </section>
 
@@ -180,8 +236,25 @@ const I18N = {
     guideTitle: "使用教學",
     step1Alt: "步驟1",
     guideStep1: "步驟1：開啟遊戲 → 帳號資訊 → 顯示 QRcode",
-    guideStep2: "步驟2：掃描 QRcode，複製網址",
-    guideStep3: "步驟3：貼到下方輸入框，點「解析」",
+    guideStep1Detail: "將 QR Code 完整截圖，避免裁掉四周的白色邊界。",
+    guideStep2: "步驟2：選擇或拖曳 QR Code 截圖",
+    guideStep2Detail: "手機可直接從相簿選取；電腦也可把圖片拖進上傳區。",
+    guideStep3: "步驟3：等待本機辨識並查看結果",
+    guideStep3Detail: "辨識成功後會自動填入連結並解析 height、scale 與預估身高。",
+    uploadTitle: "從 QR Code 截圖辨識",
+    uploadDescription: "選擇含有 Sky QR Code 的 PNG、JPG、WebP 或 GIF 圖片。",
+    chooseImage: "選擇 QR Code 截圖",
+    dropHint: "或將圖片拖曳到這裡（最大 15 MB）",
+    previewAlt: "選取的 QR Code 截圖預覽",
+    privacyTitle: "圖片不會上傳",
+    privacyBody: "QR Code 只在你的瀏覽器與裝置記憶體中辨識；本頁不會把圖片傳送、儲存或分享至伺服器。",
+    readingQr: "正在本機辨識 QR Code…",
+    qrSuccess: "辨識成功，已自動填入並解析。",
+    qrNotFound: "圖片中找不到 QR Code。請確認 QR Code 完整、清晰且未被裁切。",
+    qrUnsupported: "此瀏覽器不支援本機 QR Code 辨識，請改用最新版 Chrome、Edge 或 Safari。",
+    invalidImage: "請選擇 PNG、JPG、WebP 或 GIF 圖片。",
+    imageTooLarge: "圖片超過 15 MB，請先縮小圖片後再試。",
+    imageReadFailed: "無法讀取或辨識這張圖片，請改用清晰的原始截圖。",
     singleLabel: "單一連結",
     inputPlaceholder: "貼上網址 / o=... / token",
     parse: "解析",
@@ -229,8 +302,25 @@ const I18N = {
     guideTitle: "Guide",
     step1Alt: "Step 1",
     guideStep1: "Step 1: Open the game → Account info → Show QR code",
-    guideStep2: "Step 2: Scan the QR code and copy the URL",
-    guideStep3: "Step 3: Paste it below and click Parse",
+    guideStep1Detail: "Capture the complete QR code without cropping its white border.",
+    guideStep2: "Step 2: Choose or drop the QR code screenshot",
+    guideStep2Detail: "Choose it from your phone's photo library, or drag the image here on a computer.",
+    guideStep3: "Step 3: Wait for local recognition and view the result",
+    guideStep3Detail: "After recognition, the link is filled in and height, scale, and estimated height are parsed automatically.",
+    uploadTitle: "Recognize a QR code screenshot",
+    uploadDescription: "Choose a PNG, JPG, WebP, or GIF image containing a Sky QR code.",
+    chooseImage: "Choose QR code screenshot",
+    dropHint: "or drop an image here (15 MB maximum)",
+    previewAlt: "Preview of the selected QR code screenshot",
+    privacyTitle: "Your image is not uploaded",
+    privacyBody: "The QR code is recognized only in your browser and device memory. This page does not send, store, or share the image with a server.",
+    readingQr: "Recognizing the QR code on this device…",
+    qrSuccess: "QR code recognized and parsed automatically.",
+    qrNotFound: "No QR code was found. Make sure it is complete, sharp, and not cropped.",
+    qrUnsupported: "This browser does not support local QR code recognition. Use the latest Chrome, Edge, or Safari.",
+    invalidImage: "Choose a PNG, JPG, WebP, or GIF image.",
+    imageTooLarge: "The image is larger than 15 MB. Reduce its size and try again.",
+    imageReadFailed: "This image could not be read or recognized. Try a clear original screenshot.",
     singleLabel: "Single link",
     inputPlaceholder: "Paste URL / o=... / token",
     parse: "Parse",
@@ -269,6 +359,7 @@ const I18N = {
 let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
 let counterMode = "loading";
 let counterValue = "";
+let previewObjectUrl = "";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
 function renderCounter(){
   const el = document.getElementById("counter");
@@ -524,21 +615,80 @@ function runBatch(){
 }
 function clearBatch(){document.getElementById('batch').value='';document.getElementById('batchOut').innerHTML='';}
 
-function openPreview(fig){
-  const img = fig.querySelector('img'); if(!img) return;
-  const src = img.src, alt = img.alt || '';
-  const overlay = document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
-  overlay.innerHTML = `<img src="${src}" alt="${alt}" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)">`;
-  overlay.addEventListener('click',()=>document.body.removeChild(overlay));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.parentNode)overlay.click()},{once:true});
-  document.body.appendChild(overlay);
+function setUploadStatus(message, type=""){
+  const status = document.getElementById("uploadStatus");
+  status.textContent = message;
+  status.className = "upload-status" + (type ? " " + type : "");
+}
+
+async function recognizeQrImage(file){
+  const input = document.getElementById("qrFile");
+  const preview = document.getElementById("qrPreview");
+  if (!file || !/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) {
+    setUploadStatus(tr("invalidImage"), "error");
+    if (input) input.value = "";
+    return;
+  }
+  if (file.size > 15 * 1024 * 1024) {
+    setUploadStatus(tr("imageTooLarge"), "error");
+    if (input) input.value = "";
+    return;
+  }
+
+  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl = URL.createObjectURL(file);
+  preview.src = previewObjectUrl;
+  preview.style.display = "block";
+  setUploadStatus(tr("readingQr"));
+
+  if (!("BarcodeDetector" in window)) {
+    setUploadStatus(tr("qrUnsupported"), "error");
+    return;
+  }
+
+  let bitmap;
+  try {
+    if (typeof BarcodeDetector.getSupportedFormats === "function") {
+      const formats = await BarcodeDetector.getSupportedFormats();
+      if (!formats.includes("qr_code")) throw new Error("QR_UNSUPPORTED");
+    }
+    bitmap = await createImageBitmap(file);
+    const detector = new BarcodeDetector({formats:["qr_code"]});
+    const codes = await detector.detect(bitmap);
+    const result = codes.find(code => code.rawValue && code.rawValue.trim());
+    if (!result) {
+      setUploadStatus(tr("qrNotFound"), "error");
+      return;
+    }
+    document.getElementById("single").value = result.rawValue.trim();
+    setUploadStatus(tr("qrSuccess"), "success");
+    runSingle();
+    document.getElementById("singleOut").scrollIntoView({behavior:"smooth", block:"nearest"});
+  } catch (error) {
+    setUploadStatus(error && error.message === "QR_UNSUPPORTED" ? tr("qrUnsupported") : tr("imageReadFailed"), "error");
+  } finally {
+    if (bitmap && typeof bitmap.close === "function") bitmap.close();
+  }
 }
 
 (function () {
   applyLanguage(currentLang);
   const langSelect = document.getElementById("langSelect");
   if (langSelect) langSelect.addEventListener("change", e => applyLanguage(e.target.value));
+  const qrFile = document.getElementById("qrFile");
+  const dropZone = document.getElementById("dropZone");
+  if (qrFile) qrFile.addEventListener("change", e => recognizeQrImage(e.target.files[0]));
+  if (dropZone) {
+    ["dragenter","dragover"].forEach(type => dropZone.addEventListener(type, e => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    }));
+    ["dragleave","drop"].forEach(type => dropZone.addEventListener(type, e => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+    }));
+    dropZone.addEventListener("drop", e => recognizeQrImage(e.dataTransfer.files[0]));
+  }
 
   const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
   const KEY = 'local-visit-count';
