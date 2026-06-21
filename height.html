@@ -241,6 +241,7 @@
     </footer>
   </main>
 
+  <script src="height-token-parser.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script>
 const I18N = {
@@ -278,6 +279,7 @@ const I18N = {
     qrBlurry: "圖片可能過小、模糊或對比不足，無法辨識 QR Code。請改用清晰的原始截圖。",
     qrNotSky: "已讀取 QR Code，但內容不是可用的 Sky 身高 QR Code。",
     qrBadUrl: "已讀取 Sky QR Code，但網址或 o 參數內容錯誤。請在遊戲中重新產生 QR Code。",
+    qrUnsupportedToken: "已讀取 Sky QR Code，但目前不支援或無法確認此 Token 格式。",
     qrUnsupported: "目前的瀏覽器視窗未提供本機 QR Code 辨識功能。若從 Discord 開啟，請改在瀏覽器 App 中開啟；也可先掃描 QR Code，再將連結貼到下方解析。",
     invalidImage: "請選擇 PNG、JPG、WebP 或 GIF 圖片。",
     imageTooLarge: "圖片超過 15 MB，請先縮小圖片後再試。",
@@ -306,7 +308,10 @@ const I18N = {
     emptyToken: "空的 token",
     base64Failed: "base64 解碼失敗",
     missingToken: "找不到 o 參數",
-    missingPayload: "找不到 JSON 或 height/scale，片段: ",
+    missingPayload: "不支援或無法確認此 Token 格式",
+    invalidHeight: "Token 的 height 超出合理範圍",
+    invalidScale: "Token 的 scale 超出合理範圍",
+    unsupportedVersion: "不支援此 Token 版本",
     resultHeight: "身高",
     heightPosition: "身高位置",
     shortest: "較矮",
@@ -354,6 +359,7 @@ const I18N = {
     qrBlurry: "The image may be too small, blurry, or low-contrast to read. Try a clear original screenshot.",
     qrNotSky: "A QR code was read, but it is not a usable Sky height QR code.",
     qrBadUrl: "A Sky QR code was read, but its URL or o parameter is invalid. Generate a new QR code in the game.",
+    qrUnsupportedToken: "A Sky QR code was read, but its token format is unsupported or cannot be verified.",
     qrUnsupported: "This browser window does not provide local QR code recognition. If you opened it from Discord, open it in your browser app instead, or scan the QR code first and paste its link below.",
     invalidImage: "Choose a PNG, JPG, WebP, or GIF image.",
     imageTooLarge: "The image is larger than 15 MB. Reduce its size and try again.",
@@ -382,7 +388,10 @@ const I18N = {
     emptyToken: "Empty token",
     base64Failed: "base64 decode failed",
     missingToken: "Could not find the o parameter",
-    missingPayload: "Could not find JSON or height/scale, snippet: ",
+    missingPayload: "Unsupported or unrecognized token format",
+    invalidHeight: "Token height is outside the valid range",
+    invalidScale: "Token scale is outside the valid range",
+    unsupportedVersion: "Unsupported token version",
     resultHeight: "Estimated height",
     heightPosition: "Height position",
     shortest: "Shorter",
@@ -432,18 +441,6 @@ function applyLanguage(lang){
 function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 function fmt(x){return (x===undefined||x===null||Number.isNaN(Number(x)))?'—':Number(x).toFixed(10)}
 function calc(h,s){return 7.6 - 8.3*Number(s) - 3*Number(h)}
-function vis(s){ return String(s).replace(/[^\x20-\x7E]/g,' '); }
-function around(text, re, radius=180){
-  try{
-    const m = text.match(re);
-    if(!m) return '';
-    const i = m.index ?? text.indexOf(m[0]);
-    const start = Math.max(0, i - radius);
-    const end   = Math.min(text.length, i + m[0].length + radius);
-    return escapeHtml(text.slice(start, end));
-  }catch{ return ''; }
-}
-
 function extractOToken(input){
   let s=(input||"").trim().replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g,"");
   const head=s.match(/^o(?:=|＝|%3D)([-_~A-Za-z0-9]+)/i); if(head) return head[1];
@@ -456,146 +453,35 @@ function extractOToken(input){
   if(/^[-_~A-Za-z0-9]+$/.test(s)) return s;
   throw new Error(tr("missingToken"));
 }
-function b64urlToText(token){
-  if(!token) throw new Error(tr("emptyToken"));
-  try{token=decodeURIComponent(token);}catch{}
-  let b64=token.replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'/'); b64+='='.repeat((4-(b64.length%4))%4);
-  try{ return atob(b64); }catch(e){}
-  try{
-    const bin=atob(b64),bytes=new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i)&0xFF;
-    return new TextDecoder('utf-8',{fatal:false}).decode(bytes);
-  }catch(e){}
-  try{
-    const bin=atob(b64);let cleaned='';
-    for(let i=0;i<bin.length;i++){const c=bin.charCodeAt(i);cleaned+=(c>=32&&c<=126)?bin[i]:' ';}
-    return cleaned;
-  }catch(e){throw new Error(tr("base64Failed"));}
-}
-
-function scanJsonBlocks(text){
-  const collect=(s)=>{const blocks=[];let start=-1,depth=0,inStr=false,esc=false;
-    for(let i=0;i<s.length;i++){const ch=s[i];
-      if(start===-1){if(ch==='{'){start=i;depth=1;inStr=false;esc=false;}continue;}
-      if(esc){esc=false;continue;}
-      if(ch==='\\'){esc=true;continue;}
-      if(ch==='"'){inStr=!inStr;continue;}
-      if(!inStr){if(ch==='{')depth++;else if(ch==='}'){depth--;if(depth===0){blocks.push(s.slice(start,i+1));start=-1;}}}
-    }return blocks;};
-  let blocks=collect(text); if(blocks.length) return blocks;
-  let cleaned=''; for(let i=0;i<text.length;i++){const c=text.charCodeAt(i);cleaned+=(c>=32&&c<=126)?text[i]:' ';} return collect(cleaned);
-}
-function findHeightScale(obj){
-  if(obj&&typeof obj==="object"){
-    if("height" in obj && "scale" in obj) return {height:obj.height,scale:obj.scale};
-    if("(" in obj && "s" in obj) {
-      const height = Number(obj["("]);
-      const scale = Number(obj.s);
-      if (!Number.isNaN(height) && !Number.isNaN(scale) && Math.abs(scale) <= 10) {
-        return {height, scale};
-      }
-    }
-    for(const k in obj){try{const r=findHeightScale(obj[k]); if(r) return r;}catch{}}
-  }
-  return null;
-}
-
-function grabPackedHeightScale(s){
-  s = vis(s);
-  const m = s.match(/\((?:h)?"?\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))/)
-    || s.match(/"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))(?=\s*,\s*"v"\s*:)/);
-  if (!m) return null;
-  const height = Number(m[1]);
-  const scale = Number(m[2]);
-  if (Number.isNaN(height) || Number.isNaN(scale) || Math.abs(scale) > 10) return null;
-  return {height, scale};
-}
-
-function grabHeightFromText(s){
-  s = vis(s);
-  const m1 = s.match(/(?:heig?h|eigh|eight)\s*[\):"]?[^0-9-]{0,80}(-?(?:\d+(?:\.\d+)?|\.\d+))/i);
-  if (m1) {
-    let raw = m1[1];
-    if (raw.startsWith('.')) raw = '0' + raw;
-    const v = parseFloat(raw);
-    if (!Number.isNaN(v)) return v;
-  }
-  return null;
-}
-
-function grabScaleFromText(s){
-  s = vis(s);
-  const m = s.match(/scale[^0-9-]{0,120}(-?(?:\d*\.\d+|\d+\.?\d*))/i);
-  if (m) {
-    let raw = m[1];
-    if (raw.startsWith('.')) raw = '0' + raw;
-    const v = parseFloat(raw);
-    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
-  }
-  const m2 = s.match(/scale[^0-9-]{0,120}(0?\d{6,10})/i);
-  if (m2) {
-    const digits = m2[1].replace(/^0/, '');
-    const cand1  = parseFloat('0.'  + digits);
-    const cand2  = parseFloat('0.0' + digits);
-    const v = (cand2 < 0.2) ? cand2 : cand1;
-    if (!Number.isNaN(v) && Math.abs(v) <= 10) return v;
-  }
-  return null;
-}
-
-function grabHeightNearScale(s){
-  s = vis(s);
-  const p = s.search(/scale/i);
-  if (p < 0) return null;
-  const seg  = s.slice(Math.max(0, p - 80), p);
-  const nums = [...seg.matchAll(/-?(?:\d+\.\d+|\.\d+|\d+)/g)];
-  if (!nums.length) return null;
-  let raw = nums[nums.length - 1][0];
-  if (raw.startsWith('.')) raw = '0' + raw;
-  const v = parseFloat(raw);
-  return Number.isNaN(v) ? null : v;
-}
-
 function parseHeightScaleFromUrl(input){
-  const token   = extractOToken(input);
-  const decoded = b64urlToText(token);
-
-  const clean = vis(decoded);
-  const ctxH  = around(clean, /(?:heigh[t\)]?|eight")\s*[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.\d+))/i, 200);
-  const ctxS  = around(clean, /scale[^0-9-]{0,120}(?:-?(?:\d*\.\d+|\d+\.?\d*)|0?\d{6,10})/i, 200);
+  const token = extractOToken(input);
+  let bytes;
+  try {
+    bytes = SkyHeightToken.decodeBase64Url(token);
+  } catch {
+    throw new Error(tr("base64Failed"));
+  }
   const rawEl = document.getElementById('rawSnippet');
   const hEl   = document.getElementById('ctxHeight');
   const sEl   = document.getElementById('ctxScale');
-  if (hEl)   hEl.textContent   = ctxH || tr("missingHeight");
-  if (sEl)   sEl.textContent   = ctxS || tr("missingScale");
-  if (rawEl) rawEl.textContent = escapeHtml(clean.slice(0, 600));
+  if (hEl) hEl.textContent = tr("missingHeight");
+  if (sEl) sEl.textContent = tr("missingScale");
+  if (rawEl) rawEl.textContent = SkyHeightToken.bytesToPrintable(bytes, 600);
 
-  let h = grabHeightFromText(decoded);
-  let s = grabScaleFromText(decoded);
-  if (s != null && h == null) {
-    h = grabHeightNearScale(decoded);
+  try {
+    return SkyHeightToken.parseBytes(bytes);
+  } catch (error) {
+    if (error && error.code === "INVALID_HEIGHT") throw new Error(tr("invalidHeight"));
+    if (error && error.code === "INVALID_SCALE") throw new Error(tr("invalidScale"));
+    if (error && error.code === "UNSUPPORTED_VERSION") {
+      const unsupportedVersion = new Error(tr("unsupportedVersion"));
+      unsupportedVersion.code = "UNSUPPORTED_TOKEN";
+      throw unsupportedVersion;
+    }
+    const unsupported = new Error(tr("missingPayload"));
+    unsupported.code = "UNSUPPORTED_TOKEN";
+    throw unsupported;
   }
-  if (h != null && s != null) return { height: h, scale: s };
-
-  const packed = grabPackedHeightScale(decoded);
-  if (packed) return packed;
-
-  const blocks = scanJsonBlocks(decoded);
-  for (const js of blocks) {
-    try {
-      const data = JSON.parse(js);
-      const r = findHeightScale(data);
-      if (r) return r;
-    } catch {}
-    try {
-      const repaired = js.replace(/[^\x20-\x7E]/g,' ');
-      const d2 = JSON.parse(repaired);
-      const r2 = findHeightScale(d2);
-      if (r2) return r2;
-    } catch {}
-  }
-
-  throw new Error(tr("missingPayload") + clean.slice(0, 600));
 }
 
 function renderHeightVisual(value, h2Value, hMinus2Value){
@@ -858,8 +744,8 @@ async function recognizeQrImage(file){
     }
     try {
       parseHeightScaleFromUrl(rawValue);
-    } catch {
-      setUploadStatus(tr("qrBadUrl"), "error");
+    } catch (error) {
+      setUploadStatus(tr(error && error.code === "UNSUPPORTED_TOKEN" ? "qrUnsupportedToken" : "qrBadUrl"), "error");
       return;
     }
     document.getElementById("single").value = rawValue;
