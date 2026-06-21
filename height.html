@@ -502,7 +502,8 @@ function findHeightScale(obj){
 
 function grabPackedHeightScale(s){
   s = vis(s);
-  const m = s.match(/\((?:h)?"?\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))/);
+  const m = s.match(/\((?:h)?"?\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))/)
+    || s.match(/"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))\s*,\s*"s"\s*:\s*(-?(?:\d+\.\d+|\.\d+|\d+))(?=\s*,\s*"v"\s*:)/);
   if (!m) return null;
   const height = Number(m[1]);
   const scale = Number(m[2]);
