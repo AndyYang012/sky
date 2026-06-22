@@ -489,7 +489,7 @@ function renderHeightVisual(value, h2Value, hMinus2Value){
   const max = Math.max(h2Value, hMinus2Value);
   const span = max - min;
   const position = span > 0 ? Math.max(0, Math.min(100, ((value - min) / span) * 100)) : 50;
-  const band = position < 33.333 ? tr("shortest") : position > 66.667 ? tr("tallest") : tr("middle");
+  const band = position < 33.333 ? tr("tallest") : position > 66.667 ? tr("shortest") : tr("middle");
   const ticks = [0,25,50,75,100].map(percent => {
     const tickValue = min + span * percent / 100;
     return `<span class="height-tick" style="left:${percent}%">${tickValue.toFixed(2)}</span>`;
@@ -504,7 +504,7 @@ function renderHeightVisual(value, h2Value, hMinus2Value){
       <div class="height-marker" style="left:${position.toFixed(2)}%" title="${value.toFixed(4)}"></div>
       ${ticks}
     </div>
-    <div class="height-band"><span>${tr("shortest")}</span><span>${tr("middle")}</span><span>${tr("tallest")}</span></div>
+    <div class="height-band"><span>${tr("tallest")}</span><span>${tr("middle")}</span><span>${tr("shortest")}</span></div>
   </section>`;
 }
 
