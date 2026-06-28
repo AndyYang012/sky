@@ -243,6 +243,7 @@
 
   <script src="height-token-parser.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="height-qr-processing.js"></script>
   <script>
 const I18N = {
   "zh-Hant": {
@@ -676,19 +677,35 @@ async function detectQrWithBarcodeDetector(file){
 async function detectQrWithJsQr(file){
   if (typeof window.jsQR !== "function") return "";
   const image = await loadImageFile(file);
-  const maxDimension = 2048;
-  const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
-  const width = Math.max(1, Math.round(image.naturalWidth * scale));
-  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const fallbackScale = Math.min(1, 2048 / Math.max(image.naturalWidth, image.naturalHeight));
+  const scanSizes = window.SkyQrProcessing
+    ? window.SkyQrProcessing.scanDimensions(image.naturalWidth, image.naturalHeight)
+    : [{
+        width:Math.max(1, Math.round(image.naturalWidth * fallbackScale)),
+        height:Math.max(1, Math.round(image.naturalHeight * fallbackScale))
+      }];
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently:true});
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
-  context.drawImage(image, 0, 0, width, height);
-  const pixels = context.getImageData(0, 0, width, height);
-  const result = window.jsQR(pixels.data, width, height, {inversionAttempts:"attemptBoth"});
-  return result && result.data ? result.data.trim() : "";
+
+  for (const size of scanSizes) {
+    canvas.width = size.width;
+    canvas.height = size.height;
+    context.drawImage(image, 0, 0, size.width, size.height);
+    const pixels = context.getImageData(0, 0, size.width, size.height);
+    const variants = [pixels.data];
+    if (window.SkyQrProcessing) {
+      variants.push(window.SkyQrProcessing.normalizeContrast(pixels.data));
+      variants.push(window.SkyQrProcessing.binarizeOtsu(pixels.data));
+    }
+
+    for (const data of variants) {
+      const result = window.jsQR(data, size.width, size.height, {inversionAttempts:"attemptBoth"});
+      if (result && result.data) return result.data.trim();
+    }
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+  return "";
 }
 
 async function recognizeQrImage(file){
