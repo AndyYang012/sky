@@ -7,6 +7,7 @@
 
   const MAX_TOKEN_LENGTH = 16384;
   const SUPPORTED_VERSIONS = new Set([8]);
+  const PACKED_V2_VERSIONS = new Set([2]);
   const BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   function fail(code) {
@@ -122,8 +123,18 @@
   }
 
   function hasSupportedEnvelope(bytes) {
-    if (bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x01) return true;
+    if (
+      bytes.length >= 3 &&
+      bytes[0] === 0xf1 &&
+      (bytes[1] === 0x01 || bytes[1] === 0x02)
+    ) {
+      return true;
+    }
     return bytes[skipWhitespace(bytes, 0)] === 0x7b;
+  }
+
+  function isPackedV2Envelope(bytes) {
+    return bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x02;
   }
 
   function parseCandidate(bytes, start) {
@@ -155,10 +166,45 @@
     };
   }
 
-  function validateCandidate(candidate) {
+  function parsePackedV2Candidate(bytes, start) {
+    // f1 02 packets use binary dictionary references for the height key and
+    // the zero-valued avatar field. Match those references exactly so random
+    // numbers elsewhere in the packet cannot become height candidates.
+    if (start < 2 || bytes[start - 2] !== 0xf1 || bytes[start - 1] !== 0x08) return null;
+
+    const height = readNumber(bytes, start, false);
+    if (!height) return null;
+    const scale = readField(bytes, height.index, "s", false);
+    if (!scale) return null;
+    const version = readField(bytes, scale.index, "v", true);
+    if (!version) return null;
+
+    let index = skipWhitespace(bytes, version.index);
+    if (bytes[index++] !== 0x2c || bytes[index++] !== 0x22 || bytes[index++] !== 0x61) return null;
+    if (bytes[index++] !== 0x0c || bytes[index++] !== 0x00 || bytes[index++] !== 0xe0) return null;
+    if (bytes[index++] !== 0x65 || bytes[index++] !== 0x22 || bytes[index++] !== 0x3a) return null;
+
+    const energy = readNumber(bytes, skipWhitespace(bytes, index), true);
+    if (!energy) return null;
+    const role = readField(bytes, energy.index, "r", true);
+    if (!role) return null;
+
+    const end = skipWhitespace(bytes, role.index);
+    if (bytes[end] !== 0x7d || skipWhitespace(bytes, end + 1) !== bytes.length) return null;
+    return {
+      height: height.value,
+      scale: scale.value,
+      version: version.value,
+      avatar: 0,
+      energy: energy.value,
+      role: role.value
+    };
+  }
+
+  function validateCandidate(candidate, supportedVersions) {
     if (candidate.height < -2 || candidate.height > 2) return "INVALID_HEIGHT";
     if (candidate.scale < 0 || candidate.scale > 1) return "INVALID_SCALE";
-    if (!SUPPORTED_VERSIONS.has(candidate.version)) return "UNSUPPORTED_VERSION";
+    if (!supportedVersions.has(candidate.version)) return "UNSUPPORTED_VERSION";
     for (const key of ["avatar", "energy", "role"]) {
       if (!Number.isSafeInteger(candidate[key]) || candidate[key] < 0) return "UNSUPPORTED_FORMAT";
     }
@@ -168,17 +214,18 @@
   function parseBytes(bytes) {
     if (!(bytes instanceof Uint8Array) || !hasSupportedEnvelope(bytes)) fail("UNSUPPORTED_FORMAT");
 
+    const packedV2 = isPackedV2Envelope(bytes);
     const candidates = [];
     for (let i = 0; i < bytes.length; i++) {
       const byte = bytes[i];
       if (byte !== 0x2d && (byte < 0x30 || byte > 0x39)) continue;
-      const candidate = parseCandidate(bytes, i);
+      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i);
       if (candidate) candidates.push(candidate);
     }
 
     if (candidates.length > 1) fail("AMBIGUOUS_FORMAT");
     if (candidates.length === 0) fail("UNSUPPORTED_FORMAT");
-    const error = validateCandidate(candidates[0]);
+    const error = validateCandidate(candidates[0], packedV2 ? PACKED_V2_VERSIONS : SUPPORTED_VERSIONS);
     if (error) fail(error);
     return candidates[0];
   }

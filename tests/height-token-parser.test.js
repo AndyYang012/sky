@@ -25,6 +25,20 @@ function makeToken(payload, packed = false) {
   return encode(packed ? Buffer.concat([Buffer.from([0xf1, 0x01, 0xff, 0x00]), bytes]) : bytes);
 }
 
+function makePackedV2Token(height, options = {}) {
+  const scale = options.scale ?? 0;
+  const version = options.version ?? 2;
+  const energy = options.energy ?? 6350;
+  const role = options.role ?? 0;
+  const avatarMarker = options.avatarMarker || [0x0c, 0x00, 0xe0];
+  return encode(Buffer.concat([
+    Buffer.from([0xf1, 0x02, 0x7b, 0x22, 0x62, 0x22, 0x3a, 0x5b, 0x5d, 0x00, 0xf1, 0x08]),
+    Buffer.from(`${height},"s":${scale},"v":${version},"a`, "ascii"),
+    Buffer.from(avatarMarker),
+    Buffer.from(`e":${energy},"r":${role}}`, "ascii")
+  ]));
+}
+
 function expectCode(token, code) {
   assert.throws(() => parser.parseToken(token), error => error && error.code === code);
 }
@@ -54,12 +68,26 @@ assert.deepEqual(
   [0.75, -2]
 );
 
+const packedV2 = parser.parseToken(makePackedV2Token(1.923913));
+assert.deepEqual(packedV2, {
+  height: 1.923913,
+  scale: 0,
+  version: 2,
+  avatar: 0,
+  energy: 6350,
+  role: 0
+});
+
 expectCode("abc$", "INVALID_BASE64");
 expectCode("YWJj=", "INVALID_BASE64");
 expectCode(productionTokens[0].token.slice(0, -8), "UNSUPPORTED_FORMAT");
 expectCode(makeToken('{"height":2.01,"s":0.1,"v":8,"a":0,"e":0,"r":0}'), "INVALID_HEIGHT");
 expectCode(makeToken('{"height":1,"s":1.01,"v":8,"a":0,"e":0,"r":0}'), "INVALID_SCALE");
 expectCode(makeToken('{"height":1,"s":0.1,"v":9,"a":0,"e":0,"r":0}'), "UNSUPPORTED_VERSION");
+expectCode(makeToken('{"height":1,"s":0.1,"v":2,"a":0,"e":0,"r":0}'), "UNSUPPORTED_VERSION");
+expectCode(makePackedV2Token(1, {version: 8}), "UNSUPPORTED_VERSION");
+expectCode(makePackedV2Token(1, {avatarMarker: [0x0c, 0x00, 0xe1]}), "UNSUPPORTED_FORMAT");
+expectCode(encode(Buffer.from('\xf1\x02{"height":1,"s":0.1,"v":2,"a":0,"e":0,"r":0}', "latin1")), "UNSUPPORTED_FORMAT");
 expectCode(makeToken('{"height":1,"s":0.1,"a":0,"v":8,"e":0,"r":0}'), "UNSUPPORTED_FORMAT");
 expectCode(makeToken('{"note":"1,\\"s\\":0.1,\\"v\\":8,\\"a\\":0,\\"e\\":0,\\"r\\":0}"}'), "UNSUPPORTED_FORMAT");
 expectCode(encode(Buffer.from('prefix:"height":1,"s":0.1,"v":8,"a":0,"e":0,"r":0}', "latin1")), "UNSUPPORTED_FORMAT");
