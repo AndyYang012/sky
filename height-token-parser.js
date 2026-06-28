@@ -137,9 +137,23 @@
     return bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x02;
   }
 
-  function parseCandidate(bytes, start) {
+  function hasHeightPrefix(bytes, start, allowCompressedKey) {
     const before = previousNonWhitespace(bytes, start);
-    if (before < 0 || bytes[before] !== 0x3a) return null;
+    if (before >= 0 && bytes[before] === 0x3a) return true;
+
+    // Some f1 01 packets use this dictionary reference in place of the
+    // literal `"h":` bytes after a permanent-height potion changes height.
+    return Boolean(
+      allowCompressedKey &&
+      start >= 3 &&
+      bytes[start - 3] === 0x00 &&
+      bytes[start - 2] === 0xf0 &&
+      bytes[start - 1] === 0x26
+    );
+  }
+
+  function parseCandidate(bytes, start, allowCompressedKey) {
+    if (!hasHeightPrefix(bytes, start, allowCompressedKey)) return null;
 
     const height = readNumber(bytes, start, false);
     if (!height) return null;
@@ -215,11 +229,12 @@
     if (!(bytes instanceof Uint8Array) || !hasSupportedEnvelope(bytes)) fail("UNSUPPORTED_FORMAT");
 
     const packedV2 = isPackedV2Envelope(bytes);
+    const packedV1 = bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x01;
     const candidates = [];
     for (let i = 0; i < bytes.length; i++) {
       const byte = bytes[i];
       if (byte !== 0x2d && (byte < 0x30 || byte > 0x39)) continue;
-      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i);
+      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i, packedV1);
       if (candidate) candidates.push(candidate);
     }
 
