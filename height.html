@@ -759,13 +759,15 @@ async function recognizeQrImage(file){
       setUploadStatus(tr("qrNotSky"), "error");
       return;
     }
+    // Keep the decoded URL available even when its token is not yet supported.
+    // This makes it possible to inspect or copy a newly introduced Sky format.
+    document.getElementById("single").value = rawValue;
     try {
       parseHeightScaleFromUrl(rawValue);
     } catch (error) {
       setUploadStatus(tr(error && error.code === "UNSUPPORTED_TOKEN" ? "qrUnsupportedToken" : "qrBadUrl"), "error");
       return;
     }
-    document.getElementById("single").value = rawValue;
     setUploadStatus(tr("qrSuccess"), "success");
     runSingle();
     document.getElementById("singleOut").scrollIntoView({behavior:"smooth", block:"nearest"});
