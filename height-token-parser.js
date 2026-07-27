@@ -115,6 +115,21 @@
     index = skipWhitespace(bytes, index);
     if (bytes[index++] !== 0x22) return null;
     if (bytes[index++] !== name.charCodeAt(0)) return null;
+    if (
+      !integerOnly &&
+      bytes[index] === 0x0f &&
+      bytes[index + 1] === 0x00 &&
+      bytes[index + 2] === 0xf0 &&
+      bytes[index + 3] === 0x15
+    ) {
+      // Newer f1 01 QR tokens use this dictionary reference for `":0.`.
+      // The following digits therefore represent a fractional number.
+      index = skipWhitespace(bytes, index + 4);
+      const fraction = readNumber(bytes, index, true);
+      if (!fraction) return null;
+      const digits = fraction.index - index;
+      return {value: fraction.value / (10 ** digits), index: fraction.index};
+    }
     if (bytes[index++] !== 0x22) return null;
     index = skipWhitespace(bytes, index);
     if (bytes[index++] !== 0x3a) return null;
@@ -141,15 +156,16 @@
     const before = previousNonWhitespace(bytes, start);
     if (before >= 0 && bytes[before] === 0x3a) return true;
 
-    // Some f1 01 packets use this dictionary reference in place of the
-    // literal `"h":` bytes after a permanent-height potion changes height.
-    return Boolean(
-      allowCompressedKey &&
-      start >= 3 &&
-      bytes[start - 3] === 0x00 &&
-      bytes[start - 2] === 0xf0 &&
-      bytes[start - 1] === 0x26
-    );
+    // Some f1 01 packets use a dictionary reference in place of the literal
+    // `"h":` bytes. Both references have been observed in production QR
+    // tokens: 00 f0 26 after a permanent-height potion, and eb 00 d0 in
+    // newer Sky Mirror / AR QR tokens.
+    if (!allowCompressedKey || start < 3) return false;
+    const a = bytes[start - 3];
+    const b = bytes[start - 2];
+    const c = bytes[start - 1];
+    return (a === 0x00 && b === 0xf0 && c === 0x26) ||
+      (a === 0xeb && b === 0x00 && c === 0xd0);
   }
 
   function parseCandidate(bytes, start, allowCompressedKey) {
@@ -225,6 +241,61 @@
     return "";
   }
 
+  function bytesToLatin1(bytes, start, end) {
+    let text = "";
+    for (let i = start; i < end; i++) text += String.fromCharCode(bytes[i]);
+    return text;
+  }
+
+  function findLastHeightBeforeScale(bytes, scaleIndex) {
+    const text = bytesToLatin1(bytes, 0, scaleIndex);
+    const matches = text.matchAll(/-?\d+\.\d+(?:[eE][-+]?\d+)?/g);
+    let height = null;
+    for (const match of matches) {
+      const value = Number(match[0]);
+      if (Number.isFinite(value) && value >= -2 && value <= 2) height = value;
+    }
+    return height;
+  }
+
+  function findScaleAfterAnchor(bytes, start) {
+    // The scale value follows the `"s` anchor. Limit this scan to its local
+    // payload region so unrelated numeric values elsewhere cannot be used.
+    const text = bytesToLatin1(bytes, start, Math.min(bytes.length, start + 80));
+    const matches = text.matchAll(/-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/g);
+    for (const match of matches) {
+      const raw = match[0];
+      const value = Number(raw);
+      if (!Number.isFinite(value)) continue;
+      if (raw.includes(".") || /e/i.test(raw)) {
+        if (value >= 0 && value <= 1) return value;
+        continue;
+      }
+      // A compact f1 01 field can omit the leading `0.` and store the
+      // fractional scale as nine decimal digits.
+      if (/^\d{7,9}$/.test(raw)) {
+        const scaled = value / 1000000000;
+        if (scaled >= 0 && scaled <= 1) return scaled;
+      }
+    }
+    return null;
+  }
+
+  function parseTolerantPackedV1Candidate(bytes) {
+    // This is intentionally a fallback. It only runs for f1 01 packets that
+    // the exact parser cannot understand, and relies on the stable `"s`
+    // field anchor plus conservative value ranges.
+    if (skipWhitespace(bytes, bytes.length - 1) !== bytes.length - 1 || bytes[bytes.length - 1] !== 0x7d) return null;
+    for (let i = 0; i < bytes.length - 1; i++) {
+      if (bytes[i] !== 0x22 || bytes[i + 1] !== 0x73) continue;
+      const height = findLastHeightBeforeScale(bytes, i);
+      const scale = findScaleAfterAnchor(bytes, i + 2);
+      if (height === null || scale === null) continue;
+      return {height, scale, format: "tolerant-f1"};
+    }
+    return null;
+  }
+
   function parseBytes(bytes) {
     if (!(bytes instanceof Uint8Array) || !hasSupportedEnvelope(bytes)) fail("UNSUPPORTED_FORMAT");
 
@@ -239,7 +310,11 @@
     }
 
     if (candidates.length > 1) fail("AMBIGUOUS_FORMAT");
-    if (candidates.length === 0) fail("UNSUPPORTED_FORMAT");
+    if (candidates.length === 0) {
+      const fallback = packedV1 ? parseTolerantPackedV1Candidate(bytes) : null;
+      if (!fallback) fail("UNSUPPORTED_FORMAT");
+      return fallback;
+    }
     const error = validateCandidate(candidates[0], packedV2 ? PACKED_V2_VERSIONS : SUPPORTED_VERSIONS);
     if (error) fail(error);
     return candidates[0];

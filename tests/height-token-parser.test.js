@@ -18,6 +18,11 @@ const productionTokens = [
     name: "compressed height key after potion",
     token: "8QF7ImIiOlsxOTAxMTgyOSwwAgCBIihibGFja18GAPQJLG5vbmUpIl0sInciOlsyNDk2MjE2Mjk2LAAQLRsAEGhFAIoxMjc2NjE5NxsA-QBtcyI6WzQyNjc3NTY2NzgcAOluIjpbMzgzMDk0NzkzNxsAEGZSAJo1MzIwOTM5OTBtAAA3AJU0NjU1Mjk5MzG0AMZtYWdlbnRhX2N5YW61ACBmY2QAmTU5OTk4Njg4NUkAEHDRAJo1NzQwOTUxNDNkABF0tgBsODk1NzQy6wDwJi0xLjMxNjE2MDMsInMiOjAuMDI0NzEwNzczLCJ2Ijo4LCJhIjowLCJlIjo1OTAsInIiOjB9",
     height: -1.3161603
+  },
+  {
+    name: "Sky Mirror QR compressed height key",
+    token: "8QF7ImIiOlsxOTAxMTgyOSwwAgCBIihibGFja18GALEsbm9uZSkiXSwidyoAVTkxNTEwKgAQLRkAEGgZAJkxMjc2NjE5NzYbAPkAbXMiOls0MjY3NzU2Njc4HADpbiI6WzM4MzA5NDc5MzcbABBmUgCaNTMyMDkzOTkwbQAANwCVNDY1NTI5OTMxsgDGbWFnZW50YV9jeWFuswAgZmNJAIo3Njk3NzgzOX8A6nAiOlsyNTc0MDk1MTQzZAARdLYAbDg5NTc0MusA0DAuOTc0ODQyMTMsInMPAPAVMDI0NzEwNzczLCJ2Ijo4LCJhIjowLCJlIjo1OTAsInIiOjB9",
+    height: 0.97484213
   }
 ];
 
@@ -41,6 +46,13 @@ function makePackedV2Token(height, options = {}) {
     Buffer.from(`${height},"s":${scale},"v":${version},"a`, "ascii"),
     Buffer.from(avatarMarker),
     Buffer.from(`e":${energy},"r":${role}}`, "ascii")
+  ]));
+}
+
+function makeFuturePackedV1Token(height, scale) {
+  return encode(Buffer.concat([
+    Buffer.from([0xf1, 0x01, 0xee]),
+    Buffer.from(`payload=${height},"s"\x0f\x00\xf0\x15${String(scale).replace("0.", "")},"v":9}`, "latin1")
   ]));
 }
 
@@ -81,6 +93,13 @@ assert.deepEqual(packedV2, {
   avatar: 0,
   energy: 6350,
   role: 0
+});
+
+const futurePackedV1 = parser.parseToken(makeFuturePackedV1Token(-0.875, 0.024710773));
+assert.deepEqual(futurePackedV1, {
+  height: -0.875,
+  scale: 0.024710773,
+  format: "tolerant-f1"
 });
 
 expectCode("abc$", "INVALID_BASE64");
