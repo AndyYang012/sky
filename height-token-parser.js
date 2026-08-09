@@ -141,7 +141,7 @@
     if (
       bytes.length >= 3 &&
       bytes[0] === 0xf1 &&
-      (bytes[1] === 0x01 || bytes[1] === 0x02)
+      (bytes[1] === 0x01 || bytes[1] === 0x02 || bytes[1] === 0x03)
     ) {
       return true;
     }
@@ -271,6 +271,7 @@
         if (value >= 0 && value <= 1) return value;
         continue;
       }
+      if (raw === "0") return 0;
       // A compact f1 01 field can omit the leading `0.` and store the
       // fractional scale as nine decimal digits.
       if (/^\d{7,9}$/.test(raw)) {
@@ -281,10 +282,10 @@
     return null;
   }
 
-  function parseTolerantPackedV1Candidate(bytes) {
-    // This is intentionally a fallback. It only runs for f1 01 packets that
-    // the exact parser cannot understand, and relies on the stable `"s`
-    // field anchor plus conservative value ranges.
+  function parseTolerantPackedCandidate(bytes) {
+    // This is intentionally a fallback. It only runs for recognised packed
+    // packets that the exact parser cannot understand, and relies on the
+    // stable `"s` field anchor plus conservative value ranges.
     if (skipWhitespace(bytes, bytes.length - 1) !== bytes.length - 1 || bytes[bytes.length - 1] !== 0x7d) return null;
     for (let i = 0; i < bytes.length - 1; i++) {
       if (bytes[i] !== 0x22 || bytes[i + 1] !== 0x73) continue;
@@ -300,18 +301,18 @@
     if (!(bytes instanceof Uint8Array) || !hasSupportedEnvelope(bytes)) fail("UNSUPPORTED_FORMAT");
 
     const packedV2 = isPackedV2Envelope(bytes);
-    const packedV1 = bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x01;
+    const packedFallback = bytes.length >= 3 && bytes[0] === 0xf1 && !packedV2;
     const candidates = [];
     for (let i = 0; i < bytes.length; i++) {
       const byte = bytes[i];
       if (byte !== 0x2d && (byte < 0x30 || byte > 0x39)) continue;
-      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i, packedV1);
+      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i, packedFallback);
       if (candidate) candidates.push(candidate);
     }
 
     if (candidates.length > 1) fail("AMBIGUOUS_FORMAT");
     if (candidates.length === 0) {
-      const fallback = packedV1 ? parseTolerantPackedV1Candidate(bytes) : null;
+      const fallback = packedFallback ? parseTolerantPackedCandidate(bytes) : null;
       if (!fallback) fail("UNSUPPORTED_FORMAT");
       return fallback;
     }

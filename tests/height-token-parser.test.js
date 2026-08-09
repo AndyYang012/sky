@@ -18,11 +18,6 @@ const productionTokens = [
     name: "compressed height key after potion",
     token: "8QF7ImIiOlsxOTAxMTgyOSwwAgCBIihibGFja18GAPQJLG5vbmUpIl0sInciOlsyNDk2MjE2Mjk2LAAQLRsAEGhFAIoxMjc2NjE5NxsA-QBtcyI6WzQyNjc3NTY2NzgcAOluIjpbMzgzMDk0NzkzNxsAEGZSAJo1MzIwOTM5OTBtAAA3AJU0NjU1Mjk5MzG0AMZtYWdlbnRhX2N5YW61ACBmY2QAmTU5OTk4Njg4NUkAEHDRAJo1NzQwOTUxNDNkABF0tgBsODk1NzQy6wDwJi0xLjMxNjE2MDMsInMiOjAuMDI0NzEwNzczLCJ2Ijo4LCJhIjowLCJlIjo1OTAsInIiOjB9",
     height: -1.3161603
-  },
-  {
-    name: "Sky Mirror QR compressed height key",
-    token: "8QF7ImIiOlsxOTAxMTgyOSwwAgCBIihibGFja18GALEsbm9uZSkiXSwidyoAVTkxNTEwKgAQLRkAEGgZAJkxMjc2NjE5NzYbAPkAbXMiOls0MjY3NzU2Njc4HADpbiI6WzM4MzA5NDc5MzcbABBmUgCaNTMyMDkzOTkwbQAANwCVNDY1NTI5OTMxsgDGbWFnZW50YV9jeWFuswAgZmNJAIo3Njk3NzgzOX8A6nAiOlsyNTc0MDk1MTQzZAARdLYAbDg5NTc0MusA0DAuOTc0ODQyMTMsInMPAPAVMDI0NzEwNzczLCJ2Ijo4LCJhIjowLCJlIjo1OTAsInIiOjB9",
-    height: 0.97484213
   }
 ];
 
@@ -49,10 +44,21 @@ function makePackedV2Token(height, options = {}) {
   ]));
 }
 
-function makeFuturePackedV1Token(height, scale) {
+function makeCompressedMirrorToken(height, scale) {
   return encode(Buffer.concat([
-    Buffer.from([0xf1, 0x01, 0xee]),
-    Buffer.from(`payload=${height},"s"\x0f\x00\xf0\x15${String(scale).replace("0.", "")},"v":9}`, "latin1")
+    Buffer.from([0xf1, 0x01, 0x7b, 0xeb, 0x00, 0xd0]),
+    Buffer.from(`${height},"s`, "ascii"),
+    Buffer.from([0x0f, 0x00, 0xf0, 0x15]),
+    Buffer.from(`${String(scale).replace("0.", "")},"v":8,"a":0,"e":590,"r":0}`, "ascii")
+  ]));
+}
+
+function makeTolerantPackedToken(packetType, height, scale) {
+  return encode(Buffer.concat([
+    Buffer.from([0xf1, packetType, 0x7b]),
+    Buffer.from(`payload=${height},"s":${scale},"v":4,"a`, "ascii"),
+    Buffer.from([0x0c, 0x00, 0xe0]),
+    Buffer.from(`e":30113,"r":0}`, "ascii")
   ]));
 }
 
@@ -95,10 +101,21 @@ assert.deepEqual(packedV2, {
   role: 0
 });
 
-const futurePackedV1 = parser.parseToken(makeFuturePackedV1Token(-0.875, 0.024710773));
-assert.deepEqual(futurePackedV1, {
+const compressedMirror = parser.parseToken(makeCompressedMirrorToken(0.97484213, 0.024710773));
+assert.equal(compressedMirror.height, 0.97484213);
+assert.equal(compressedMirror.scale, 0.024710773);
+
+const packedV1Fallback = parser.parseToken(makeTolerantPackedToken(0x01, -0.875, 0.024710773));
+assert.deepEqual(packedV1Fallback, {
   height: -0.875,
   scale: 0.024710773,
+  format: "tolerant-f1"
+});
+
+const packedV3Fallback = parser.parseToken(makeTolerantPackedToken(0x03, 1.9695315, 0));
+assert.deepEqual(packedV3Fallback, {
+  height: 1.9695315,
+  scale: 0,
   format: "tolerant-f1"
 });
 
