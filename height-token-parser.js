@@ -8,6 +8,7 @@
   const MAX_TOKEN_LENGTH = 16384;
   const SUPPORTED_VERSIONS = new Set([8]);
   const PACKED_V2_VERSIONS = new Set([2]);
+  const PACKED_V3_VERSIONS = new Set([4]);
   const BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   function fail(code) {
@@ -141,7 +142,7 @@
     if (
       bytes.length >= 3 &&
       bytes[0] === 0xf1 &&
-      (bytes[1] === 0x01 || bytes[1] === 0x02)
+      (bytes[1] === 0x01 || bytes[1] === 0x02 || bytes[1] === 0x03)
     ) {
       return true;
     }
@@ -150,6 +151,10 @@
 
   function isPackedV2Envelope(bytes) {
     return bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x02;
+  }
+
+  function isPackedV3Envelope(bytes) {
+    return bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x03;
   }
 
   function hasHeightPrefix(bytes, start, allowCompressedKey) {
@@ -231,6 +236,45 @@
     };
   }
 
+  function parsePackedV3Candidate(bytes, start) {
+    // f1 03 QR packets retain the literal height, scale, and version fields,
+    // but encode the zero-valued avatar field as a dictionary reference.
+    if (!hasHeightPrefix(bytes, start, false)) return null;
+
+    const height = readNumber(bytes, start, false);
+    if (!height) return null;
+    const scale = readField(bytes, height.index, "s", false);
+    if (!scale) return null;
+    const version = readField(bytes, scale.index, "v", true);
+    if (!version) return null;
+
+    let index = skipWhitespace(bytes, version.index);
+    if (bytes[index++] !== 0x2c || bytes[index++] !== 0x22 || bytes[index++] !== 0x61) return null;
+    if (bytes[index++] !== 0x0c || bytes[index++] !== 0x00 || bytes[index++] !== 0xf0 || bytes[index++] !== 0x00) return null;
+    if (bytes[index++] !== 0x65 || bytes[index++] !== 0x22 || bytes[index++] !== 0x3a) return null;
+
+    const encodedScale = readNumber(bytes, skipWhitespace(bytes, index), true);
+    if (!encodedScale || encodedScale.value > 1000000000) return null;
+    const role = readField(bytes, encodedScale.index, "r", true);
+    if (!role) return null;
+
+    const end = skipWhitespace(bytes, role.index);
+    if (bytes[end] !== 0x7d || skipWhitespace(bytes, end + 1) !== bytes.length) return null;
+    // In f1 03, the field following this dictionary reference stores the
+    // scale as an integer with nine implied decimal places. The preceding
+    // literal `"s":0` is retained by the packet encoder and is not the
+    // player's actual scale.
+    return {
+      height: height.value,
+      scale: encodedScale.value / 1000000000,
+      scaleRaw: encodedScale.value,
+      version: version.value,
+      avatar: 0,
+      energy: 0,
+      role: role.value
+    };
+  }
+
   function validateCandidate(candidate, supportedVersions) {
     if (candidate.height < -2 || candidate.height > 2) return "INVALID_HEIGHT";
     if (candidate.scale < 0 || candidate.scale > 1) return "INVALID_SCALE";
@@ -300,12 +344,14 @@
     if (!(bytes instanceof Uint8Array) || !hasSupportedEnvelope(bytes)) fail("UNSUPPORTED_FORMAT");
 
     const packedV2 = isPackedV2Envelope(bytes);
+    const packedV3 = isPackedV3Envelope(bytes);
     const packedV1 = bytes.length >= 3 && bytes[0] === 0xf1 && bytes[1] === 0x01;
     const candidates = [];
     for (let i = 0; i < bytes.length; i++) {
       const byte = bytes[i];
       if (byte !== 0x2d && (byte < 0x30 || byte > 0x39)) continue;
-      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : parseCandidate(bytes, i, packedV1);
+      const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) :
+        packedV3 ? parsePackedV3Candidate(bytes, i) : parseCandidate(bytes, i, packedV1);
       if (candidate) candidates.push(candidate);
     }
 
@@ -315,7 +361,8 @@
       if (!fallback) fail("UNSUPPORTED_FORMAT");
       return fallback;
     }
-    const error = validateCandidate(candidates[0], packedV2 ? PACKED_V2_VERSIONS : SUPPORTED_VERSIONS);
+    const supportedVersions = packedV2 ? PACKED_V2_VERSIONS : packedV3 ? PACKED_V3_VERSIONS : SUPPORTED_VERSIONS;
+    const error = validateCandidate(candidates[0], supportedVersions);
     if (error) fail(error);
     return candidates[0];
   }

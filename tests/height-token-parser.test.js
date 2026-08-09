@@ -95,6 +95,19 @@ assert.deepEqual(packedV2, {
   role: 0
 });
 
+// A Sky Mirror / AR QR captured on 2026-08-09. These f1 03 packets use a
+// compressed zero-valued avatar field and version 4.
+const skyMirrorV3 = parser.parseToken("8QN7ImIiOlsxODQwNTQ0ODQ2LDACAIEiKGJsYWNrXwYAFywMAPgDKSJdLCJ3IjpbMjQ5NjIxNjI5MwDBdWVfY3lhbixub25lKgAQaCoAlDY4MTM2OTc0OSoAEC0bACBtc3kAmTA0NDAzNzM5MRwAy24iOlszODAwODg0NhsAEGY2AJk1MzIwOTM5OTAbABJoNwB_ODY2MzQzNcsAAwWaACBmYy0AmTU5OTk4Njg4NUkAEHAbAJo2MzQwMjg0NjZkABF0tgCKOTc5NTEzMzccAPELIjoxLjk2OTUzMTUsInMiOjAsInYiOjQsImEMAPAAZSI6MzAxMTMsInIiOjB9");
+assert.deepEqual(skyMirrorV3, {
+  height: 1.9695315,
+  scale: 0.000030113,
+  scaleRaw: 30113,
+  version: 4,
+  avatar: 0,
+  energy: 0,
+  role: 0
+});
+
 const futurePackedV1 = parser.parseToken(makeFuturePackedV1Token(-0.875, 0.024710773));
 assert.deepEqual(futurePackedV1, {
   height: -0.875,
