@@ -47,6 +47,9 @@
     button.primary:hover{filter:brightness(.95)}
     button.secondary{background:#fff;border:1px solid #bbb;color:#333;}
     button.secondary:hover{background:#f0f0f0;}
+    .report-copy-note{min-height:1.5em;margin:8px 0 0;color:var(--muted);font-size:13px;}
+    .report-copy-note.success{color:var(--ok);font-weight:700;}
+    .report-copy-note.error{color:var(--err);font-weight:700;}
     .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
     .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     table{width:100%;border-collapse:collapse;margin-top:15px;background:rgba(255,255,255,.9);border-radius:10px;overflow:hidden;}
@@ -199,6 +202,10 @@
         <button class="primary" onclick="runSingle()" data-i18n="parse">解析</button>
         <button class="secondary" onclick="clearSingle()" data-i18n="clear">清除</button>
       </div>
+      <div class="tools">
+        <button class="secondary" type="button" id="copyIssueLink" onclick="copyIssueAndLink()" data-i18n="copyIssueLink">📋 複製問題與連結</button>
+      </div>
+      <div id="reportCopyNote" class="report-copy-note" role="status" aria-live="polite"></div>
       <div id="singleOut"></div>
 
       <details class="debug">
@@ -289,6 +296,14 @@ const I18N = {
     inputPlaceholder: "貼上網址 / o=... / token",
     parse: "解析",
     clear: "清除",
+    copyIssueLink: "📋 複製問題與連結",
+    copyLinkFirst: "請先貼上 Sky 連結後再複製。",
+    copiedIssueLink: "已複製，可貼到 Discord 的私人問題回報。",
+    copyFailed: "無法自動複製，請長按或手動複製連結。",
+    reportIssueLabel: "問題",
+    reportIssueTemplate: "請簡短描述遇到的問題",
+    reportParseFailed: "無法解析 Sky 連結：",
+    reportParsed: "已解析，但需要協助確認結果。",
     debugSummary: "🔧 除錯區（就近顯示 height / scale 片段，已安全轉義）",
     debugHint: "若偵測不到，會顯示前 600 字的通用片段。",
     heightSnippet: "height 片段：",
@@ -369,6 +384,14 @@ const I18N = {
     inputPlaceholder: "Paste URL / o=... / token",
     parse: "Parse",
     clear: "Clear",
+    copyIssueLink: "📋 Copy issue and link",
+    copyLinkFirst: "Paste a Sky link before copying.",
+    copiedIssueLink: "Copied. Paste it into a private Discord report.",
+    copyFailed: "Could not copy automatically. Copy the link manually instead.",
+    reportIssueLabel: "Issue",
+    reportIssueTemplate: "Briefly describe the problem here",
+    reportParseFailed: "Could not parse the Sky link: ",
+    reportParsed: "The link was parsed, but the result needs to be checked.",
     debugSummary: "🔧 Debug area (nearby height / scale snippets, safely escaped)",
     debugHint: "If nothing is detected, the first 600 characters are shown as a fallback snippet.",
     heightSnippet: "height snippet:",
@@ -412,6 +435,7 @@ let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
 let counterMode = "loading";
 let counterValue = "";
 let previewObjectUrl = "";
+let lastSingleReportIssue = "";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
 function renderCounter(){
   const el = document.getElementById("counter");
@@ -509,14 +533,52 @@ function renderHeightVisual(value, h2Value, hMinus2Value){
   </section>`;
 }
 
+function setReportCopyNote(message, type=""){
+  const note = document.getElementById("reportCopyNote");
+  if (!note) return;
+  note.textContent = message;
+  note.className = "report-copy-note" + (type ? ` ${type}` : "");
+}
+
+async function copyIssueAndLink(){
+  const link = document.getElementById("single").value.trim();
+  if (!link) {
+    setReportCopyNote(tr("copyLinkFirst"), "error");
+    return;
+  }
+  const issue = lastSingleReportIssue || tr("reportIssueTemplate");
+  const report = `${tr("reportIssueLabel")}：${issue}\nSky 連結：${link}`;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(report);
+    } else {
+      const helper = document.createElement("textarea");
+      helper.value = report;
+      helper.setAttribute("readonly", "");
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      document.body.appendChild(helper);
+      helper.select();
+      const copied = document.execCommand("copy");
+      helper.remove();
+      if (!copied) throw new Error("COPY_FAILED");
+    }
+    setReportCopyNote(tr("copiedIssueLink"), "success");
+  } catch {
+    setReportCopyNote(tr("copyFailed"), "error");
+  }
+}
+
 function runSingle(){
   const url=document.getElementById('single').value.trim();
   const out=document.getElementById('singleOut'); out.innerHTML='';
+  setReportCopyNote("");
   const t0=performance.now();
   try{
     const {height,scale}=parseHeightScaleFromUrl(url);
     const val=calc(height,scale),hi=calc(2,scale),lo=calc(-2,scale);
     const ms=(performance.now()-t0).toFixed(1);
+    lastSingleReportIssue = tr("reportParsed");
     out.innerHTML=`<table>
       <tr><th>height</th><td class="mono">${fmt(height)}</td></tr>
       <tr><th>scale</th><td class="mono">${fmt(scale)}</td></tr>
@@ -526,12 +588,15 @@ function runSingle(){
       <tr><th>${tr("elapsed")}</th><td>${ms} ms</td></tr>
     </table>${renderHeightVisual(val,hi,lo)}`;
   }catch(e){
+    lastSingleReportIssue = `${tr("reportParseFailed")}${e.message||String(e)}`;
     out.innerHTML = `<div class="badge err">${tr("error")}</div> <span class="mono">${escapeHtml(e.message||String(e))}</span>`;
   }
 }
 function clearSingle(){
   document.getElementById('single').value='';
   document.getElementById('singleOut').innerHTML='';
+  lastSingleReportIssue = "";
+  setReportCopyNote("");
   const rawEl = document.getElementById('rawSnippet'); if(rawEl) rawEl.textContent='';
   const hEl = document.getElementById('ctxHeight'); if(hEl) hEl.textContent='';
   const sEl = document.getElementById('ctxScale'); if(sEl) sEl.textContent='';
