@@ -6,7 +6,7 @@
   "use strict";
 
   const MAX_TOKEN_LENGTH = 16384;
-  const SUPPORTED_VERSIONS = new Set([8]);
+  const SUPPORTED_VERSIONS = new Set([8, 9]);
   const PACKED_V2_VERSIONS = new Set([2]);
   const PACKED_V3_VERSIONS = new Set([4]);
   const BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
