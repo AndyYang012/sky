@@ -23,6 +23,12 @@ const productionTokens = [
     name: "Sky Mirror QR compressed height key",
     token: "8QF7ImIiOlsxOTAxMTgyOSwwAgCBIihibGFja18GALEsbm9uZSkiXSwidyoAVTkxNTEwKgAQLRkAEGgZAJkxMjc2NjE5NzYbAPkAbXMiOls0MjY3NzU2Njc4HADpbiI6WzM4MzA5NDc5MzcbABBmUgCaNTMyMDkzOTkwbQAANwCVNDY1NTI5OTMxsgDGbWFnZW50YV9jeWFuswAgZmNJAIo3Njk3NzgzOX8A6nAiOlsyNTc0MDk1MTQzZAARdLYAbDg5NTc0MusA0DAuOTc0ODQyMTMsInMPAPAVMDI0NzEwNzczLCJ2Ijo4LCJhIjowLCJlIjo1OTAsInIiOjB9",
     height: 0.97484213
+  },
+  {
+    name: "version 9 token",
+    token: "8QF7ImIiOlsxOTAxMTgyOSwwAgDTIih5ZWxsb3dfcmVkLAsA9AttYWdlbnRhKSJdLCJ3IjpbMjg0MzM1MDI4MjUAEC0bABBoTgCZMTI3NjYxOTc2GwD5AG1zIjpbNDI2Nzc1NjY3OBwA1W4iOls1MDgwOTY2OTeGAEJyZWRffwAPhgABEGZrAJo1MzIwOTM5OTCGAABQAJozMzA3NzcyMTGiACBmYxwAmTU5OTk4Njg4NRwAEHDZAJoyOTk0OTY5NDdTABF0vgBdODk1NzTzAPAmLTEuODg4NTU5NywicyI6MC4wMjQ3MTA3NzMsInYiOjksImEiOjAsImUiOjU5MCwiciI6MH0",
+    height: -1.8885597,
+    version: 9
   }
 ];
 
@@ -64,7 +70,7 @@ for (const sample of productionTokens) {
   const result = parser.parseToken(sample.token);
   assert.equal(result.height, sample.height, sample.name);
   assert.equal(result.scale, 0.024710773, sample.name);
-  assert.equal(result.version, 8, sample.name);
+  assert.equal(result.version, sample.version || 8, sample.name);
 }
 
 const legacyTokens = [
@@ -120,7 +126,7 @@ expectCode("YWJj=", "INVALID_BASE64");
 expectCode(productionTokens[0].token.slice(0, -8), "UNSUPPORTED_FORMAT");
 expectCode(makeToken('{"height":2.01,"s":0.1,"v":8,"a":0,"e":0,"r":0}'), "INVALID_HEIGHT");
 expectCode(makeToken('{"height":1,"s":1.01,"v":8,"a":0,"e":0,"r":0}'), "INVALID_SCALE");
-expectCode(makeToken('{"height":1,"s":0.1,"v":9,"a":0,"e":0,"r":0}'), "UNSUPPORTED_VERSION");
+expectCode(makeToken('{"height":1,"s":0.1,"v":10,"a":0,"e":0,"r":0}'), "UNSUPPORTED_VERSION");
 expectCode(makeToken('{"height":1,"s":0.1,"v":2,"a":0,"e":0,"r":0}'), "UNSUPPORTED_VERSION");
 expectCode(makePackedV2Token(1, {version: 8}), "UNSUPPORTED_VERSION");
 expectCode(makePackedV2Token(1, {avatarMarker: [0x0c, 0x00, 0xe1]}), "UNSUPPORTED_FORMAT");
