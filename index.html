@@ -26,7 +26,10 @@
     header{max-width:960px;width:100%;margin:0 auto;padding:18px 16px 8px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
     h1{font-size:28px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25);margin:0;}
     h1 img{height:32px;vertical-align:middle;margin-right:10px;}
+    .header-tools{display:flex;align-items:center;gap:8px;}
     .lang-select{width:auto;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);font-weight:700;color:#345;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .refresh-button{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);font:inherit;font-weight:700;color:#345;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .refresh-button:hover{background:#fff;}
     main{max-width:960px;margin:0 auto 32px;padding:0 16px;flex:1;width:100%;}
     .card{background:var(--glass);border-radius:18px;padding:24px;margin:18px auto;max-width:760px;box-shadow:0 12px 30px rgba(0,0,0,.15);text-align:center;}
     .card.info{text-align:left;}
@@ -49,17 +52,20 @@
     .tip{font-size:14px;color:#2f4a7a;margin-top:6px;font-weight:600;}
     @media (max-width:640px){
       header{align-items:flex-start;flex-direction:column;}
-      .lang-select{align-self:flex-end;}
+      .header-tools{align-self:flex-end;}
     }
   </style>
 </head>
 <body>
   <header>
     <h1><img src="logo.jpeg" alt="logo"><span data-i18n="appTitle">光遇小工具中心</span></h1>
-    <select id="langSelect" class="lang-select" aria-label="Language">
-      <option value="zh-Hant">繁中</option>
-      <option value="en">English</option>
-    </select>
+    <div class="header-tools">
+      <button type="button" class="refresh-button" onclick="refreshPage()" data-i18n="refreshPage">↻ 重新整理</button>
+      <select id="langSelect" class="lang-select" aria-label="Language">
+        <option value="zh-Hant">繁中</option>
+        <option value="en">English</option>
+      </select>
+    </div>
   </header>
   <main>
     <div class="card">
@@ -99,6 +105,7 @@ const I18N = {
     appTitle: "光遇小工具中心",
     homeTitle: "主畫面",
     homeIntro: "選擇想使用的工具或功能。未來更新也會在這裡出現！",
+    refreshPage: "↻ 重新整理",
     heightLink: "🔍 前往身高查詢",
     goldenLink: "✨ 找小金人攻略（未完成）",
     githubLink: "💻 查看 GitHub",
@@ -121,6 +128,7 @@ const I18N = {
     appTitle: "Sky Tools Hub",
     homeTitle: "Home",
     homeIntro: "Choose the tool or feature you want to use. Future updates will appear here too.",
+    refreshPage: "↻ Refresh",
     heightLink: "🔍 Height checker",
     goldenLink: "✨ Winged Light guide (unfinished)",
     githubLink: "💻 View on GitHub",
@@ -142,6 +150,11 @@ const I18N = {
 
 let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
+function refreshPage(){
+  const url = new URL(window.location.href);
+  url.searchParams.set("_refresh", Date.now().toString());
+  window.location.replace(url.toString());
+}
 function applyLanguage(lang){
   currentLang = I18N[lang] ? lang : "zh-Hant";
   localStorage.setItem("heightLang", currentLang);
