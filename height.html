@@ -284,6 +284,7 @@ const I18N = {
     privacyTitle: "圖片不會上傳",
     privacyBody: "QR Code 只在你的瀏覽器與裝置記憶體中辨識；本頁不會把圖片傳送、儲存或分享至伺服器。",
     readingQr: "正在本機辨識 QR Code…",
+    readingQrEnhanced: "正在加強辨識 QR Code…",
     qrSuccess: "辨識成功，已自動填入並解析。",
     qrNotFound: "圖片中沒有偵測到 QR Code。請確認上傳的是包含 QR Code 的完整截圖。",
     qrBlurry: "圖片可能過小、模糊或對比不足，無法辨識 QR Code。請改用清晰的原始截圖。",
@@ -369,6 +370,7 @@ const I18N = {
     privacyTitle: "Your image is not uploaded",
     privacyBody: "The QR code is recognized only in your browser and device memory. This page does not send, store, or share the image with a server.",
     readingQr: "Recognizing the QR code on this device…",
+    readingQrEnhanced: "Trying enhanced QR code recognition…",
     qrSuccess: "QR code recognized and parsed automatically.",
     qrNotFound: "No QR code was detected. Make sure the image contains the complete QR code.",
     qrBlurry: "The image may be too small, blurry, or low-contrast to read. Try a clear original screenshot.",
@@ -738,26 +740,34 @@ async function detectQrWithJsQr(file){
         width:Math.max(1, Math.round(image.naturalWidth * fallbackScale)),
         height:Math.max(1, Math.round(image.naturalHeight * fallbackScale))
       }];
+  const sizesByCost = scanSizes.slice().sort((a, b) => (a.width * a.height) - (b.width * b.height));
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", {willReadFrequently:true});
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
+  const yieldToBrowser = () => new Promise(resolve => requestAnimationFrame(resolve));
 
-  for (const size of scanSizes) {
+  for (const size of sizesByCost) {
     canvas.width = size.width;
     canvas.height = size.height;
     context.drawImage(image, 0, 0, size.width, size.height);
     const pixels = context.getImageData(0, 0, size.width, size.height);
-    const variants = [pixels.data];
-    if (window.SkyQrProcessing) {
-      variants.push(window.SkyQrProcessing.normalizeContrast(pixels.data));
-      variants.push(window.SkyQrProcessing.binarizeOtsu(pixels.data));
-    }
 
-    for (const data of variants) {
-      const result = window.jsQR(data, size.width, size.height, {inversionAttempts:"attemptBoth"});
-      if (result && result.data) return result.data.trim();
-    }
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    // Try the low-cost, unmodified image first. Most clear QR screenshots finish here.
+    let result = window.jsQR(pixels.data, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
+
+    if (!window.SkyQrProcessing) continue;
+    setUploadStatus(tr("readingQrEnhanced"));
+    const normalized = window.SkyQrProcessing.normalizeContrast(pixels.data);
+    result = window.jsQR(normalized, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
+
+    const binary = window.SkyQrProcessing.binarizeOtsu(pixels.data);
+    result = window.jsQR(binary, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
   }
   return "";
 }
@@ -869,7 +879,6 @@ async function recognizeQrImage(file){
 
 })();
 
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
   </script>
 </body>
 </html>
