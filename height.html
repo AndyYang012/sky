@@ -31,6 +31,8 @@
     .lang-select{width:auto;margin:0;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);font-weight:700;color:#345;box-shadow:0 2px 8px rgba(0,0,0,.08);}
     header a.back{color:#fff;text-decoration:none;font-weight:600;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(6px);transition:.2s;}
     header a.back:hover{background:rgba(255,255,255,.28);}
+    .refresh-button{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);font:inherit;font-weight:700;color:#345;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .refresh-button:hover{background:#fff;}
     main{max-width:1000px;margin:0 auto 40px;padding:0 14px;}
     .sub{text-align:center;color:#eef;font-size:13px;margin-bottom:10px;}
     .card{background:var(--glass);border-radius:16px;padding:16px;margin:14px auto;max-width:900px;box-shadow:0 8px 24px rgba(0,0,0,.1);}
@@ -132,6 +134,7 @@
         <option value="zh-Hant">繁中</option>
         <option value="en">English</option>
       </select>
+      <button type="button" class="refresh-button" onclick="refreshPage()" data-i18n="refreshPage">↻ 重新整理</button>
       <a class="back" href="index.html" data-i18n="back">← 返回主畫面</a>
     </div>
   </header>
@@ -257,6 +260,7 @@ const I18N = {
     appTitle: "光遇身高查詢",
     pageTitle: "光遇身高查詢",
     back: "← 返回主畫面",
+    refreshPage: "↻ 重新整理",
     subtitle: "Base64Url 解碼 + height/scale 解析",
     introTitle: "工具中文解釋",
     introBody: "這個頁面負責拆解 QRcode 網址中的 <code>o</code> 參數，並換算角色身高。建議操作流程：",
@@ -345,6 +349,7 @@ const I18N = {
     appTitle: "Sky Height Checker",
     pageTitle: "Sky Height Checker",
     back: "← Back to home",
+    refreshPage: "↻ Refresh",
     subtitle: "Base64Url decoding + height/scale parsing",
     introTitle: "Tool Overview",
     introBody: "This page reads the <code>o</code> parameter from a QR code URL and converts it into an estimated character height. Suggested flow:",
@@ -437,6 +442,11 @@ let counterValue = "";
 let previewObjectUrl = "";
 let lastSingleReportIssue = "";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
+function refreshPage(){
+  const url = new URL(window.location.href);
+  url.searchParams.set("_refresh", Date.now().toString());
+  window.location.replace(url.toString());
+}
 function renderCounter(){
   const el = document.getElementById("counter");
   if (!el) return;
