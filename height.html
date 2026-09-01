@@ -68,7 +68,6 @@
     .footer-inner b{color:#ffd966;}
     .footer-inner a{color:#fff;text-decoration:none;font-weight:700;border-bottom:1px solid rgba(255,255,255,.65);}
     .footer-inner a:hover{color:#ffd966;border-bottom-color:#ffd966;}
-    #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
     .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
     .guide {max-width:980px;margin:14px auto;text-align:center;}
     .guide h3 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
@@ -243,7 +242,6 @@
 
     <footer>
       <div class="footer-inner">
-        <div id="counter" data-i18n="counterLoading">累積使用次數：載入中...</div>
         <div><span data-i18n="author">製作者：</span><b>言陌</b></div>
         <div><a href="https://discord.gg/MWJ3z2HMRY" target="_blank" rel="noopener" data-i18n="discordLink">加入 DC 群</a></div>
         <div class="disclaimer" data-i18n="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
@@ -316,10 +314,6 @@ const I18N = {
     batchLabel: "多條連結（每行一條）",
     batchPlaceholder: "每行貼一條網址 / o=... / token",
     parseBatch: "批次解析",
-    counterLoading: "累積使用次數：載入中...",
-    counterTotal: "累積使用次數：",
-    counterLocal: "累積使用次數（本機）：",
-    counterUnavailable: "累積使用次數：暫時無法取得",
     author: "製作者：",
     discordLink: "加入 DC 群",
     disclaimer: "本工具與 thatgamecompany 無關，僅供玩家交流與學習使用",
@@ -405,10 +399,6 @@ const I18N = {
     batchLabel: "Multiple links (one per line)",
     batchPlaceholder: "Paste one URL / o=... / token per line",
     parseBatch: "Parse batch",
-    counterLoading: "Total uses: loading...",
-    counterTotal: "Total uses: ",
-    counterLocal: "Total uses (local): ",
-    counterUnavailable: "Total uses: unavailable",
     author: "Created by: ",
     discordLink: "Join Discord",
     disclaimer: "This tool is not affiliated with thatgamecompany. It is for player sharing and learning only.",
@@ -437,8 +427,6 @@ const I18N = {
 };
 
 let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
-let counterMode = "loading";
-let counterValue = "";
 let previewObjectUrl = "";
 let lastSingleReportIssue = "";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
@@ -446,14 +434,6 @@ function refreshPage(){
   const url = new URL(window.location.href);
   url.searchParams.set("_refresh", Date.now().toString());
   window.location.replace(url.toString());
-}
-function renderCounter(){
-  const el = document.getElementById("counter");
-  if (!el) return;
-  if (counterMode === "remote") el.textContent = tr("counterTotal") + counterValue;
-  else if (counterMode === "local") el.textContent = tr("counterLocal") + counterValue;
-  else if (counterMode === "unavailable") el.textContent = tr("counterUnavailable");
-  else el.textContent = tr("counterLoading");
 }
 function applyLanguage(lang){
   currentLang = I18N[lang] ? lang : "zh-Hant";
@@ -470,7 +450,6 @@ function applyLanguage(lang){
   });
   const select = document.getElementById("langSelect");
   if (select) select.value = currentLang;
-  renderCounter();
 }
 
 function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
@@ -888,28 +867,6 @@ async function recognizeQrImage(file){
     recognizeQrImage(imageItem.getAsFile());
   });
 
-  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
-  const KEY = 'local-visit-count';
-  const tickLocal = () => {
-    try {
-      const v = (parseInt(localStorage.getItem(KEY) || '0', 10) + 1);
-      localStorage.setItem(KEY, v);
-      counterMode = "local";
-      counterValue = v;
-      renderCounter();
-    } catch (e) {
-      counterMode = "unavailable";
-      renderCounter();
-    }
-  };
-  fetch(COUNTER_URL, { cache: 'no-cache' })
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(d => {
-      counterMode = "remote";
-      counterValue = d.value;
-      renderCounter();
-    })
-    .catch(err => { console.log('counter error:', err); tickLocal(); });
 })();
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
