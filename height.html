@@ -68,7 +68,6 @@
     .footer-inner b{color:#ffd966;}
     .footer-inner a{color:#fff;text-decoration:none;font-weight:700;border-bottom:1px solid rgba(255,255,255,.65);}
     .footer-inner a:hover{color:#ffd966;border-bottom-color:#ffd966;}
-    #counter{font-size:15px;margin-bottom:8px;font-weight:bold;text-shadow:0 0 6px rgba(0,0,0,.4);color:#fff;}
     .disclaimer{font-size:12px;color:#ddd;margin-top:6px;}
     .guide {max-width:980px;margin:14px auto;text-align:center;}
     .guide h3 {color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);margin:8px 0}
@@ -243,7 +242,6 @@
 
     <footer>
       <div class="footer-inner">
-        <div id="counter" data-i18n="counterLoading">累積使用次數：載入中...</div>
         <div><span data-i18n="author">製作者：</span><b>言陌</b></div>
         <div><a href="https://discord.gg/MWJ3z2HMRY" target="_blank" rel="noopener" data-i18n="discordLink">加入 DC 群</a></div>
         <div class="disclaimer" data-i18n="disclaimer">本工具與 thatgamecompany 無關，僅供玩家交流與學習使用</div>
@@ -286,6 +284,7 @@ const I18N = {
     privacyTitle: "圖片不會上傳",
     privacyBody: "QR Code 只在你的瀏覽器與裝置記憶體中辨識；本頁不會把圖片傳送、儲存或分享至伺服器。",
     readingQr: "正在本機辨識 QR Code…",
+    readingQrEnhanced: "正在加強辨識 QR Code…",
     qrSuccess: "辨識成功，已自動填入並解析。",
     qrNotFound: "圖片中沒有偵測到 QR Code。請確認上傳的是包含 QR Code 的完整截圖。",
     qrBlurry: "圖片可能過小、模糊或對比不足，無法辨識 QR Code。請改用清晰的原始截圖。",
@@ -316,10 +315,6 @@ const I18N = {
     batchLabel: "多條連結（每行一條）",
     batchPlaceholder: "每行貼一條網址 / o=... / token",
     parseBatch: "批次解析",
-    counterLoading: "累積使用次數：載入中...",
-    counterTotal: "累積使用次數：",
-    counterLocal: "累積使用次數（本機）：",
-    counterUnavailable: "累積使用次數：暫時無法取得",
     author: "製作者：",
     discordLink: "加入 DC 群",
     disclaimer: "本工具與 thatgamecompany 無關，僅供玩家交流與學習使用",
@@ -375,6 +370,7 @@ const I18N = {
     privacyTitle: "Your image is not uploaded",
     privacyBody: "The QR code is recognized only in your browser and device memory. This page does not send, store, or share the image with a server.",
     readingQr: "Recognizing the QR code on this device…",
+    readingQrEnhanced: "Trying enhanced QR code recognition…",
     qrSuccess: "QR code recognized and parsed automatically.",
     qrNotFound: "No QR code was detected. Make sure the image contains the complete QR code.",
     qrBlurry: "The image may be too small, blurry, or low-contrast to read. Try a clear original screenshot.",
@@ -405,10 +401,6 @@ const I18N = {
     batchLabel: "Multiple links (one per line)",
     batchPlaceholder: "Paste one URL / o=... / token per line",
     parseBatch: "Parse batch",
-    counterLoading: "Total uses: loading...",
-    counterTotal: "Total uses: ",
-    counterLocal: "Total uses (local): ",
-    counterUnavailable: "Total uses: unavailable",
     author: "Created by: ",
     discordLink: "Join Discord",
     disclaimer: "This tool is not affiliated with thatgamecompany. It is for player sharing and learning only.",
@@ -437,8 +429,6 @@ const I18N = {
 };
 
 let currentLang = localStorage.getItem("heightLang") || "zh-Hant";
-let counterMode = "loading";
-let counterValue = "";
 let previewObjectUrl = "";
 let lastSingleReportIssue = "";
 function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N["zh-Hant"][key] || key; }
@@ -446,14 +436,6 @@ function refreshPage(){
   const url = new URL(window.location.href);
   url.searchParams.set("_refresh", Date.now().toString());
   window.location.replace(url.toString());
-}
-function renderCounter(){
-  const el = document.getElementById("counter");
-  if (!el) return;
-  if (counterMode === "remote") el.textContent = tr("counterTotal") + counterValue;
-  else if (counterMode === "local") el.textContent = tr("counterLocal") + counterValue;
-  else if (counterMode === "unavailable") el.textContent = tr("counterUnavailable");
-  else el.textContent = tr("counterLoading");
 }
 function applyLanguage(lang){
   currentLang = I18N[lang] ? lang : "zh-Hant";
@@ -470,7 +452,6 @@ function applyLanguage(lang){
   });
   const select = document.getElementById("langSelect");
   if (select) select.value = currentLang;
-  renderCounter();
 }
 
 function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
@@ -759,26 +740,33 @@ async function detectQrWithJsQr(file){
         width:Math.max(1, Math.round(image.naturalWidth * fallbackScale)),
         height:Math.max(1, Math.round(image.naturalHeight * fallbackScale))
       }];
+  const sizesByCost = scanSizes.slice().sort((a, b) => (a.width * a.height) - (b.width * b.height));
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", {willReadFrequently:true});
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
+  const yieldToBrowser = () => new Promise(resolve => requestAnimationFrame(resolve));
 
-  for (const size of scanSizes) {
+  for (const size of sizesByCost) {
     canvas.width = size.width;
     canvas.height = size.height;
     context.drawImage(image, 0, 0, size.width, size.height);
     const pixels = context.getImageData(0, 0, size.width, size.height);
-    const variants = [pixels.data];
-    if (window.SkyQrProcessing) {
-      variants.push(window.SkyQrProcessing.normalizeContrast(pixels.data));
-      variants.push(window.SkyQrProcessing.binarizeOtsu(pixels.data));
-    }
 
-    for (const data of variants) {
-      const result = window.jsQR(data, size.width, size.height, {inversionAttempts:"attemptBoth"});
-      if (result && result.data) return result.data.trim();
-    }
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    let result = window.jsQR(pixels.data, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
+
+    if (!window.SkyQrProcessing) continue;
+    setUploadStatus(tr("readingQrEnhanced"));
+    const normalized = window.SkyQrProcessing.normalizeContrast(pixels.data);
+    result = window.jsQR(normalized, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
+
+    const binary = window.SkyQrProcessing.binarizeOtsu(pixels.data);
+    result = window.jsQR(binary, size.width, size.height, {inversionAttempts:"attemptBoth"});
+    if (result && result.data) return result.data.trim();
+    await yieldToBrowser();
   }
   return "";
 }
@@ -888,31 +876,8 @@ async function recognizeQrImage(file){
     recognizeQrImage(imageItem.getAsFile());
   });
 
-  const COUNTER_URL = 'https://api.countapi.xyz/hit/andyyang012/sky';
-  const KEY = 'local-visit-count';
-  const tickLocal = () => {
-    try {
-      const v = (parseInt(localStorage.getItem(KEY) || '0', 10) + 1);
-      localStorage.setItem(KEY, v);
-      counterMode = "local";
-      counterValue = v;
-      renderCounter();
-    } catch (e) {
-      counterMode = "unavailable";
-      renderCounter();
-    }
-  };
-  fetch(COUNTER_URL, { cache: 'no-cache' })
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(d => {
-      counterMode = "remote";
-      counterValue = d.value;
-      renderCounter();
-    })
-    .catch(err => { console.log('counter error:', err); tickLocal(); });
 })();
 
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
   </script>
 </body>
 </html>
