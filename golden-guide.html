@@ -38,6 +38,7 @@
     .guide-card video,
     .guide-card iframe{width:100%;border:none;border-radius:12px;background:#000;min-height:180px;}
     .note{margin-top:16px;font-size:13px;color:#37537a;text-align:center;}
+    .coming-soon{min-height:180px;display:grid;place-items:center;border:2px dashed rgba(61,133,198,.4);border-radius:12px;color:#37537a;background:rgba(111,168,220,.12);font-weight:700;text-align:center;padding:20px;}
     footer{background:rgba(30,60,120,.9);padding:18px;text-align:center;color:#fff;font-size:14px;}
     footer b{color:#ffd966;}
     @media (min-width:1200px){
@@ -74,28 +75,28 @@ const GUIDE_VIDEOS = [
   },
   {
     title: "雲野",
-    description: "介紹雲海上與隱藏洞穴中的小金人位置與路徑。",
-    file: "videos/daylight-prairie.mp4"
+    description: "攻略影片製作中，敬請期待。",
+    comingSoon: true
   },
   {
     title: "雨林",
-    description: "穿越雨林關卡時的小金人收集順序與躲雨技巧。",
-    file: "videos/hidden-forest.mp4"
+    description: "攻略影片製作中，敬請期待。",
+    comingSoon: true
   },
   {
     title: "霞谷",
-    description: "利用滑行與風場快速收集賽道沿途的小金人。",
-    file: "videos/valley-of-triumph.mp4"
+    description: "攻略影片製作中，敬請期待。",
+    comingSoon: true
   },
   {
     title: "暮土",
-    description: "避開黑暗巨獸的巡邏路線，安全取得藏在角落的小金人。",
-    file: "videos/golden-wasteland.mp4"
+    description: "攻略影片製作中，敬請期待。",
+    comingSoon: true
   },
   {
     title: "禁閣",
-    description: "逐層探索禁閣，整理隱藏房間與黑暗角落的小金人位置。",
-    file: "videos/vault-of-knowledge.mp4"
+    description: "攻略影片製作中，敬請期待。",
+    comingSoon: true
   }
 ];
 
@@ -109,12 +110,9 @@ function renderGuides(){
   grid.innerHTML = GUIDE_VIDEOS.map(video => {
     const title = escapeHtml(video.title);
     const description = escapeHtml(video.description);
-    const media = video.youtube
-      ? `<iframe src="${escapeHtml(video.youtube)}" title="${title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`
-      : `<video controls preload="metadata">
-        <source src="${escapeHtml(video.file)}" type="video/mp4">
-        您的瀏覽器不支援影片播放，請<a href="${escapeHtml(video.file)}">下載影片</a>觀看。
-      </video>`;
+    const media = video.comingSoon
+      ? `<div class="coming-soon" role="status">影片製作中，敬請期待</div>`
+      : `<iframe src="${escapeHtml(video.youtube)}" title="${title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
     return `<article class="guide-card">
       <h3>${title}</h3>
       <p>${description}</p>
