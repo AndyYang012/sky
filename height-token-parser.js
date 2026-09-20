@@ -6,7 +6,8 @@
   "use strict";
 
   const MAX_TOKEN_LENGTH = 16384;
-  const SUPPORTED_VERSIONS = new Set([8, 9]);
+  // Sky Mirror v14 retains the height/scale field layout of v8 and v9.
+  const SUPPORTED_VERSIONS = new Set([8, 9, 14]);
   const PACKED_V2_VERSIONS = new Set([2]);
   const PACKED_V3_VERSIONS = new Set([4]);
   const KNOWN_PACKED_ENVELOPES = new Set([0x01, 0x02, 0x03]);
