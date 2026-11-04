@@ -91,6 +91,13 @@ assert.deepEqual(
   [0.75, -2]
 );
 
+// f1 01 version 4 uses literal scale and energy, as in the reported screenshot.
+assert.deepEqual(parser.parseToken(makeToken('{"h":1.920522,"s":0.024710773,"v":4,"a":0,"e":590,"r":0}', true)), {
+  height: 1.920522, scale: 0.024710773, version: 4, avatar: 0, energy: 590, role: 0
+});
+expectCode(makeToken('{"h":1,"s":0.1,"v":5,"a":0,"e":590,"r":0}', true), "UNSUPPORTED_VERSION");
+expectCode(makeToken('{"h":1,"s":0.1,"v":4,"a":0,"e":590,"r":0}'), "UNSUPPORTED_VERSION");
+
 const packedV2 = parser.parseToken(makePackedV2Token(1.923913));
 assert.deepEqual(packedV2, {
   height: 1.923913,

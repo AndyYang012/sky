@@ -8,6 +8,7 @@
   const MAX_TOKEN_LENGTH = 16384;
   // Sky Mirror v14 retains the height/scale field layout of v8 and v9.
   const SUPPORTED_VERSIONS = new Set([8, 9, 14]);
+  const PACKED_V1_VERSIONS = new Set([4, ...SUPPORTED_VERSIONS]);
   const PACKED_V2_VERSIONS = new Set([2]);
   const PACKED_V3_VERSIONS = new Set([4]);
   const KNOWN_PACKED_ENVELOPES = new Set([0x01, 0x02, 0x03]);
@@ -133,7 +134,7 @@
     if (!futurePacked) for (let i = 0; i < bytes.length; i++) { const byte = bytes[i]; if (byte !== 0x2d && (byte < 0x30 || byte > 0x39)) continue; const candidate = packedV2 ? parsePackedV2Candidate(bytes, i) : packedV3 ? parsePackedV3Candidate(bytes, i) : parseCandidate(bytes, i, packedV1); if (candidate) candidates.push(candidate); }
     if (candidates.length > 1) fail("AMBIGUOUS_FORMAT");
     if (candidates.length === 0) { const fallback = packedV1 ? parseTolerantPackedV1Candidate(bytes) : futurePacked ? parseFuturePackedCandidate(bytes) : null; if (!fallback) fail("UNSUPPORTED_FORMAT"); return fallback; }
-    const supportedVersions = packedV2 ? PACKED_V2_VERSIONS : packedV3 ? PACKED_V3_VERSIONS : SUPPORTED_VERSIONS; const error = validateCandidate(candidates[0], supportedVersions); if (error) fail(error); return candidates[0];
+    const supportedVersions = packedV2 ? PACKED_V2_VERSIONS : packedV3 ? PACKED_V3_VERSIONS : packedV1 ? PACKED_V1_VERSIONS : SUPPORTED_VERSIONS; const error = validateCandidate(candidates[0], supportedVersions); if (error) fail(error); return candidates[0];
   }
 
   function parseToken(token) { return parseBytes(decodeBase64Url(token)); }
